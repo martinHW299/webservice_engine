@@ -17,7 +17,7 @@ import java.util.Map;
 public class SourceService {
 
     @Autowired
-    SourceRepository sourceRepository;
+    private SourceRepository sourceRepository;
 
     @PostConstruct
     public void init() {

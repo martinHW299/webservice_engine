@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.sql.DataSource;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +30,7 @@ public class ResponseController {
     public ResponseController(SourceService sourceService) {
         this.sourceService = sourceService;
     }
+
 
     @PostMapping
     public ResponseEntity<Object> executeQuery(@RequestBody Map<String, Object> request) {

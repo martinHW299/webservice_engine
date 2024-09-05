@@ -54,4 +54,12 @@ public class Utils {
         matcher.appendTail(buffer);
         return buffer.toString();
     }
+
+    public static String normalizeSql(String sql) {
+        if (sql== null) {
+            return null;
+        }
+        sql = sql.replace(";", "");
+        return sql.trim().toLowerCase();
+    }
 }
