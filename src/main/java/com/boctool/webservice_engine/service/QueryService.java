@@ -34,12 +34,11 @@ public class QueryService {
 
             try {
                 if (existsByQueryMd5(queryMd5)) {
-                    response.put(""+i++, "SQL statement already exists " + queryMd5);
+                    response.put(""+i++, "Error: sql statement already exists " + queryMd5);
                     continue;
                 }
 
                 Query query = new Query();
-                query.setQueryId(UUID.randomUUID().toString());
                 query.setQueryMd5(queryMd5);
                 query.setQueryText(queryText);
                 query.setQueryParams(new ObjectMapper().writeValueAsString(parameters));
@@ -49,9 +48,9 @@ public class QueryService {
                 response.put(""+i++, query);
 
             } catch (JsonProcessingException e) {
-                response.put(""+i++, "Processing parameters for query " + queryMd5 + ": " + e.getMessage());
+                response.put(""+i++, "Error: processing parameters for query " + queryMd5 + ": " + e.getMessage());
             } catch (Exception e) {
-                response.put(""+i++, "Saving query " + queryMd5 + ": " + e.getMessage());
+                response.put(""+i++, "Error: saving query " + queryMd5 + ": " + e.getMessage());
             }
         }
 

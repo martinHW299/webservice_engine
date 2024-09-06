@@ -38,19 +38,23 @@ public class Utils {
         }
     }
 
-    public static String replaceParameters (String query, Map<String, String> parameters) {
+    public static String replaceParameters(String query, Map<String, Object> parameters) {
         Pattern pattern = Pattern.compile("\\{\\{(\\w+)\\}\\}");
         Matcher matcher = pattern.matcher(query);
         StringBuffer buffer = new StringBuffer();
+
         while (matcher.find()) {
             String paramName = matcher.group(1);
-            String paramValue = parameters.get(paramName);
+            Object paramValue = parameters.get(paramName);
+
             if (paramValue != null) {
-                matcher.appendReplacement(buffer, "'"+paramValue+"'");
+                String paramValueStr = paramValue.toString();
+                matcher.appendReplacement(buffer, "'" + paramValueStr + "'");
             } else {
-                throw new RuntimeException("Parameters "+ paramName + " not found in provided paramters");
+                throw new RuntimeException("Parameter " + paramName + " not found in provided parameters");
             }
         }
+
         matcher.appendTail(buffer);
         return buffer.toString();
     }
@@ -62,4 +66,5 @@ public class Utils {
         sql = sql.replace(";", "");
         return sql.trim().toLowerCase();
     }
+
 }

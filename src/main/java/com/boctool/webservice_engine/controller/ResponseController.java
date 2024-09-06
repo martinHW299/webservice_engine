@@ -32,7 +32,7 @@ public class ResponseController {
     }
 
 
-    @PostMapping
+    /*@PostMapping
     public ResponseEntity<Object> executeQuery(@RequestBody Map<String, Object> request) {
         String sourceId = (String) request.get("sourceId");
         String query = (String) request.get("query");
@@ -52,7 +52,7 @@ public class ResponseController {
             return new ResponseEntity<>("Source not found", HttpStatus.NOT_FOUND);
         }
 
-        String finalQuery = replaceParameters(query, parameter);
+        //String finalQuery = replaceParameters(query, parameter);
 
         logger.info("Final Query: {}", finalQuery);
         logger.info("Parameters: {}", parameter);
@@ -75,5 +75,5 @@ public class ResponseController {
             logger.error("Error executing query: {}", e.getMessage());
             return new ResponseEntity<>("Error executing query: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-    }
+    }*/
 }

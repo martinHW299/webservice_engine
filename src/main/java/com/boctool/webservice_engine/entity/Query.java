@@ -2,13 +2,17 @@ package com.boctool.webservice_engine.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
 
 @Entity
 @Table(name = "TST_API_QUERY")
 public class Query {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "QUERY_ID", updatable = false, nullable = false, length = 64)
     private String queryId;
     @Column(name = "QUERY_MD5", nullable = false, updatable = false, length = 64)
