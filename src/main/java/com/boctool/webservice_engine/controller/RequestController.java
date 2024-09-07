@@ -26,4 +26,9 @@ public class RequestController {
     public ResponseEntity<Object> executeQuery(@RequestBody List<RequestDTO> requestDTOS) {
         return requestService.executeQueries(requestDTOS);
     }
+
+    @PostMapping("/deleteAll")
+    public void deleteAllRequests(){
+        requestService.deleteAllRequests();
+    }
 }

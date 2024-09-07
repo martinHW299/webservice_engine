@@ -58,11 +58,11 @@ public class SourceService {
     public Map<String, Object> saveSources(List<Source> sources){
         List<Source> savedSources = sourceRepository.saveAll(sources);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("state", "SUCCESS");
-        response.put("savedData", savedSources);
+        Map<String, Object> log = new HashMap<>();
+        log.put("state", "SUCCESS");
+        log.put("savedData", savedSources);
 
-        return response;
+        return log;
     }
 
     public List<Source> findAllSources() {

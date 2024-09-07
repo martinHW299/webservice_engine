@@ -23,7 +23,7 @@ public class QueryService {
 
 
     public ResponseEntity<Object> saveQueries(List<QueryDTO> queryDTOS){
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> log = new HashMap<>();
         int i = 1;
 
         for (QueryDTO queryDTO : queryDTOS) {
@@ -34,7 +34,7 @@ public class QueryService {
 
             try {
                 if (existsByQueryMd5(queryMd5)) {
-                    response.put(""+i++, "Error: sql statement already exists " + queryMd5);
+                    log.put(""+i++, "Error: sql statement already exists " + queryMd5);
                     continue;
                 }
 
@@ -45,16 +45,16 @@ public class QueryService {
                 query.setQueryRegdate(new Date());
                 queryRepository.save(query);
 
-                response.put(""+i++, query);
+                log.put(""+i++, query);
 
             } catch (JsonProcessingException e) {
-                response.put(""+i++, "Error: processing parameters for query " + queryMd5 + ": " + e.getMessage());
+                log.put(""+i++, "Error: processing parameters for query " + queryMd5 + ": " + e.getMessage());
             } catch (Exception e) {
-                response.put(""+i++, "Error: saving query " + queryMd5 + ": " + e.getMessage());
+                log.put(""+i++, "Error: saving query " + queryMd5 + ": " + e.getMessage());
             }
         }
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(log, HttpStatus.OK);
     }
 
 
