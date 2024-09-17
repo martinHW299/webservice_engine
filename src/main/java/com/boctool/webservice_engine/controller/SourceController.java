@@ -30,9 +30,8 @@ public class SourceController {
     }
 
     @PostMapping
-    public Map<String, Object> saveSources(@RequestBody List<Source> sources) {
-        Map<String, Object> response = sourceService.saveSources(sources);
-        return response;
+    public void saveSources(@RequestBody List<Source> sources) {
+        sourceService.saveListOfSources(sources);
     }
 
     @PostMapping("/deleteAll")

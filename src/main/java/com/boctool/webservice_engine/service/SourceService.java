@@ -2,10 +2,13 @@ package com.boctool.webservice_engine.service;
 
 import com.boctool.webservice_engine.entity.Source;
 import com.boctool.webservice_engine.repository.SourceRepository;
+import com.boctool.webservice_engine.utils.EncryptionUtils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -26,19 +29,30 @@ public class SourceService {
 
     //Map of DataSource
     Map<String, DataSource> dataSourceMap = new HashMap<>();
+    private static final String PASSPHRASE = "nothingIsFullySecured";
+    /*
+    @Value("${encryption.passphrase}")
+    private String passphrase;
+    */ // Load passphrase from an environment variable or secure location
 
     public void loadAllSources(){
         List<Source> sources = sourceRepository.findAll();
 
-        for (Source source : sources){
+        for (Source source : sources) {
             HikariConfig hikariConfig = new HikariConfig();
             hikariConfig.setDriverClassName("oracle.jdbc.OracleDriver");
             hikariConfig.setJdbcUrl(source.getSourceUrl());
             hikariConfig.setUsername(source.getSourceUsr());
-            hikariConfig.setPassword(source.getSourcePwd());
+            String decryptedPassword;
+            try {
+                decryptedPassword = EncryptionUtils.decrypt(source.getSourcePwd(), PASSPHRASE);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            hikariConfig.setPassword(decryptedPassword);
 
             hikariConfig.setMaximumPoolSize(source.getSourcePool());
-            hikariConfig.setMinimumIdle(source.getSourcePool()/2);
+            hikariConfig.setMinimumIdle(source.getSourcePool() / 2);
 
             //hikariConfig.setConnectionTimeout(30000);  // 30 segundos
             hikariConfig.setConnectionTimeout(source.getSourceTimeout());  // 30 segundos
@@ -61,14 +75,24 @@ public class SourceService {
         return dataSourceMap.get(sourceId);
     }
 
-    public Map<String, Object> saveSources(List<Source> sources){
-        List<Source> savedSources = sourceRepository.saveAll(sources);
 
-        Map<String, Object> log = new HashMap<>();
-        log.put("state", "SUCCESS");
-        log.put("savedData", savedSources);
 
-        return log;
+
+
+    public void saveSource(Source source) throws Exception {
+        String encryptedPassword =  EncryptionUtils.encrypt(source.getSourcePwd(), PASSPHRASE);
+        source.setSourcePwd(encryptedPassword);
+        sourceRepository.save(source); // Save the source with encrypted password
+    }
+
+    public void saveListOfSources(List<Source> sources) {
+        for (Source source : sources) {
+            try {
+                saveSource(source);  // Encrypt and save each source
+            } catch (Exception e) {
+                System.err.println("Failed to save source with ID: " + source.getSourceId() + ". Error: " + e.getMessage());
+            }
+        }
     }
 
     public List<Source> findAllSources() {
