@@ -29,8 +29,8 @@ public class Response {
     @Column(name = "RESPONSE_MESSAGE", length = 2000)
     private String responseMessage;
 
-    @Column(name = "RESPONSE_DATA", length = 4000)
-    private String responseData;
+//    @Column(name = "RESPONSE_DATA", length = 4000)
+//    private String responseData;
 
     @Column(name = "RESPONSE_SOURCE_ID")
     private String responseSourceId;
@@ -90,13 +90,13 @@ public class Response {
         this.responseMessage = responseMessage;
     }
 
-    public String getResponseData() {
-        return responseData;
-    }
-
-    public void setResponseData(String responseData) {
-        this.responseData = responseData;
-    }
+//    public String getResponseData() {
+//        return responseData;
+//    }
+//
+//    public void setResponseData(String responseData) {
+//        this.responseData = responseData;
+//    }
 
     public String getResponseSourceId() {
         return responseSourceId;

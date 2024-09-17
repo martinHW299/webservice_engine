@@ -3,24 +3,24 @@ package com.boctool.webservice_engine.entity;
 import java.util.Map;
 
 public class RequestDTO {
-    String sql;
-    String source;
+    String sqlId;
+    String sourceId;
     Map<String, Object> parameters;
 
-    public String getSql() {
-        return sql;
+    public String getSqlId() {
+        return sqlId;
     }
 
-    public void setSql(String sql) {
-        this.sql = sql;
+    public void setSqlId(String sqlId) {
+        this.sqlId = sqlId;
     }
 
-    public String getSource() {
-        return source;
+    public String getSourceId() {
+        return sourceId;
     }
 
-    public void setSource(String source) {
-        this.source = source;
+    public void setSourceId(String sourceId) {
+        this.sourceId = sourceId;
     }
 
     public Map<String, Object> getParameters() {

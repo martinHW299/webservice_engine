@@ -12,14 +12,19 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static com.boctool.webservice_engine.utils.Utils.convertQueryToMD5;
-import static com.boctool.webservice_engine.utils.Utils.normalizeSql;
+import static com.boctool.webservice_engine.utils.Utilities.*;
 
 @Service
 public class QueryService {
 
     @Autowired
-    private QueryRepository queryRepository;
+    private final QueryRepository queryRepository;
+
+    public QueryService(QueryRepository queryRepository) {
+        this.queryRepository = queryRepository;
+    }
+
+    private static final Set<String> ALLOWED_TYPES = Set.of("char", "integer", "date", "datetime");
 
 
     public ResponseEntity<Object> saveQueries(List<QueryDTO> queryDTOS){
@@ -37,6 +42,8 @@ public class QueryService {
                     log.put(""+i++, "Error: sql statement already exists " + queryMd5);
                     continue;
                 }
+
+                validateInputTypeParameters(parameters);
 
                 Query query = new Query();
                 query.setQueryMd5(queryMd5);
@@ -59,11 +66,7 @@ public class QueryService {
 
 
     public boolean existsByQueryMd5(String queryMd5) {
-        if (queryRepository.findQueryByQueryMd5(queryMd5) == null){
-            return false;
-        } else{
-            return true;
-        }
+        return queryRepository.findQueryByQueryMd5(queryMd5) != null;
     }
 
     public List<Query> findAllQueries() {

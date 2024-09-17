@@ -40,9 +40,15 @@ public class SourceService {
             hikariConfig.setMaximumPoolSize(source.getSourcePool());
             hikariConfig.setMinimumIdle(source.getSourcePool()/2);
 
-            hikariConfig.setConnectionTimeout(30000);  // 30 segundos
-            hikariConfig.setIdleTimeout(600000);       // 10 minutos
-            hikariConfig.setMaxLifetime(1800000);      // 30 minutos
+            //hikariConfig.setConnectionTimeout(30000);  // 30 segundos
+            hikariConfig.setConnectionTimeout(source.getSourceTimeout());  // 30 segundos
+
+            //hikariConfig.setIdleTimeout(600000);       // 10 minutos
+            hikariConfig.setIdleTimeout(source.getSourceIdletimeout());       // 10 minutos
+
+            //hikariConfig.setMaxLifetime(1800000);      // 30 minutos
+            hikariConfig.setMaxLifetime(source.getSourceMaxlifetime());      // 30 minutos
+
 
             HikariDataSource dataSource = new HikariDataSource(hikariConfig);
 

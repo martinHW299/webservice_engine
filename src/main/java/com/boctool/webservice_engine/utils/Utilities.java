@@ -3,10 +3,22 @@ package com.boctool.webservice_engine.utils;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Utils {
+public class Utilities {
+
+    private static final Set<String> ALLOWED_TYPES = Set.of("char", "integer", "date", "datetime");
+
+    public static void validateInputTypeParameters(Map<String, String> parameters) {
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            String paramType = entry.getValue().toLowerCase();
+            if (!ALLOWED_TYPES.contains(paramType)) {
+                throw new IllegalArgumentException("Invalid parameter type: " + paramType + " for key: " + entry.getKey());
+            }
+        }
+    }
 
     public static String determineQueryType(String query) {
         String trimmedQuery = query.trim().toUpperCase();

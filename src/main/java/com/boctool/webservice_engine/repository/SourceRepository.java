@@ -10,4 +10,5 @@ import java.util.List;
 public interface SourceRepository extends JpaRepository<Source, String> {
     Source findSourceBySourceId(String sourceId);
     List<Source> findSourceBySourceStatus(String status);
+    boolean existsBySourceId(String sourceId);
 }

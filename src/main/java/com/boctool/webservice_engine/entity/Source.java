@@ -2,7 +2,6 @@ package com.boctool.webservice_engine.entity;
 
 
 import jakarta.persistence.*;
-import jdk.jfr.Enabled;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDate;
@@ -27,10 +26,16 @@ public class Source {
     private Integer sourcePool = 2;
     @Column(name = "SOURCE_REGDATE", updatable = false)
     private LocalDate sourceRegdate = LocalDate.now();
-
     //default 'PE' -- AC,HI,EL,AN
     @Column(name = "SOURCE_STATUS", length = 2)
     private String sourceStatus = "PE";
+    @Column(name = "SOURCE_TIMEOUT")
+    private long sourceTimeout = 20000;
+    @Column(name = "SOURCE_IDLETIMEOUT")
+    private long sourceIdletimeout = 300000;
+    @Column(name = "SOURCE_MAXLIFETIME")
+    private long sourceMaxlifetime = 900000;
+
 
     public String getSourceId() {
         return sourceId;
@@ -94,5 +99,29 @@ public class Source {
 
     public void setSourceStatus(String sourceStatus) {
         this.sourceStatus = sourceStatus;
+    }
+
+    public long getSourceTimeout() {
+        return sourceTimeout;
+    }
+
+    public void setSourceTimeout(long sourceTimeout) {
+        this.sourceTimeout = sourceTimeout;
+    }
+
+    public long getSourceIdletimeout() {
+        return sourceIdletimeout;
+    }
+
+    public void setSourceIdletimeout(long sourceIdletimeout) {
+        this.sourceIdletimeout = sourceIdletimeout;
+    }
+
+    public long getSourceMaxlifetime() {
+        return sourceMaxlifetime;
+    }
+
+    public void setSourceMaxlifetime(long sourceMaxlifetime) {
+        this.sourceMaxlifetime = sourceMaxlifetime;
     }
 }
