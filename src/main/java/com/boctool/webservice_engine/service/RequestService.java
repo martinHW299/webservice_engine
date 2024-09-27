@@ -234,7 +234,7 @@ public class RequestService {
 
     private boolean isValidDate(String datestr) {
         try {
-            new SimpleDateFormat("yyyy-MM-dd").parse(datestr);
+            new SimpleDateFormat("dd-MM-yyyy").parse(datestr);
             return true;
         } catch (ParseException e) {
             return false;
