@@ -7,8 +7,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -30,6 +28,7 @@ public class SourceService {
     //Map of DataSource
     Map<String, DataSource> dataSourceMap = new HashMap<>();
     private static final String PASSPHRASE = "nothingIsFullySecured";
+
     /*
     @Value("${encryption.passphrase}")
     private String passphrase;
@@ -37,19 +36,21 @@ public class SourceService {
 
     public void loadAllSources(){
         List<Source> sources = sourceRepository.findAll();
-
+        System.out.println("Sources list: "+ sources);
         for (Source source : sources) {
             HikariConfig hikariConfig = new HikariConfig();
             hikariConfig.setDriverClassName("oracle.jdbc.OracleDriver");
             hikariConfig.setJdbcUrl(source.getSourceUrl());
-            hikariConfig.setUsername(source.getSourceUsr());
             String decryptedPassword;
+            String decryptedUsr;
             try {
                 decryptedPassword = EncryptionUtils.decrypt(source.getSourcePwd(), PASSPHRASE);
+                decryptedUsr = EncryptionUtils.decrypt(source.getSourceUsr(), PASSPHRASE);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Error: decrypt connection information", e);
             }
             hikariConfig.setPassword(decryptedPassword);
+            hikariConfig.setUsername(decryptedUsr);
 
             hikariConfig.setMaximumPoolSize(source.getSourcePool());
             hikariConfig.setMinimumIdle(source.getSourcePool() / 2);
@@ -81,6 +82,8 @@ public class SourceService {
 
     public void saveSource(Source source) throws Exception {
         String encryptedPassword =  EncryptionUtils.encrypt(source.getSourcePwd(), PASSPHRASE);
+        String encryptedSourceUsr = EncryptionUtils.encrypt(source.getSourceUsr(), PASSPHRASE);
+        source.setSourceUsr(encryptedSourceUsr);
         source.setSourcePwd(encryptedPassword);
         sourceRepository.save(source); // Save the source with encrypted password
     }

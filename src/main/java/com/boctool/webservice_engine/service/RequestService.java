@@ -187,7 +187,6 @@ public class RequestService {
         requestRepository.save(request);
     }
 
-
     private void validateElementsForExecution(String sqlId, String sourceId, Map<String, Object> requestParams) {
         if (sqlId != null && sourceId != null && requestParams != null) {
             // Check if query exists in the database
@@ -196,7 +195,6 @@ public class RequestService {
             if (!queryExists) {
                 throw new IllegalArgumentException("Error: SQL statement does not exist in the database: " + sqlId);
             }
-
             // Check if source exists in the database
             boolean sourceExists = sourceRepository.existsBySourceId(sourceId);
             logger.info("Source exists: {}", sourceExists);
@@ -207,8 +205,6 @@ public class RequestService {
             throw new IllegalArgumentException("Error: Got null value - sqlId = " + sqlId + ", sourceId = " + sourceId + ", requestParams = " + requestParams);
         }
     }
-
-
 
     private void validateParameters(Map<String, String> queryParams, Map<String, Object> requestParams){
         for(Map.Entry<String, String> entry : queryParams.entrySet()) {
