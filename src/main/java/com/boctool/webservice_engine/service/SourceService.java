@@ -47,7 +47,7 @@ public class SourceService {
                 decryptedPassword = EncryptionUtils.decrypt(source.getSourcePwd(), PASSPHRASE);
                 decryptedUsr = EncryptionUtils.decrypt(source.getSourceUsr(), PASSPHRASE);
             } catch (Exception e) {
-                throw new RuntimeException("Error: decrypt connection information", e);
+                throw new RuntimeException("Error decrypting connection information", e);
             }
             hikariConfig.setPassword(decryptedPassword);
             hikariConfig.setUsername(decryptedUsr);

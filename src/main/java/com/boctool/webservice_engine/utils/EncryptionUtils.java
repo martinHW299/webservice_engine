@@ -12,7 +12,6 @@ public class EncryptionUtils {
     private static final int ITERATION_COUNT = 10000; // Iteration count for key derivation
     private static final int SALT_LENGTH = 8; // Salt length in bytes
 
-    // Encrypt the sourcePassword using Password-Based Encryption (PBE)
     public static String encrypt(String password, String passphrase) throws Exception {
         // Generate a random salt
         byte[] salt = new byte[SALT_LENGTH];

@@ -193,16 +193,16 @@ public class RequestService {
             boolean queryExists = queryRepository.existsByQueryId(sqlId);
             logger.info("Query exists: {}", queryExists);
             if (!queryExists) {
-                throw new IllegalArgumentException("Error: SQL statement does not exist in the database: " + sqlId);
+                throw new IllegalArgumentException("Error SQL statement does not exist in the database: " + sqlId);
             }
             // Check if source exists in the database
             boolean sourceExists = sourceRepository.existsBySourceId(sourceId);
             logger.info("Source exists: {}", sourceExists);
             if (!sourceExists) {
-                throw new IllegalArgumentException("Error: Source does not exist in the database: " + sourceId);
+                throw new IllegalArgumentException("Error source does not exist in the database: " + sourceId);
             }
         } else {
-            throw new IllegalArgumentException("Error: Got null value - sqlId = " + sqlId + ", sourceId = " + sourceId + ", requestParams = " + requestParams);
+            throw new IllegalArgumentException("Error got null value - sqlId = " + sqlId + ", sourceId = " + sourceId + ", requestParams = " + requestParams);
         }
     }
 

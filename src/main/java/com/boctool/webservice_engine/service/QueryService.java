@@ -42,7 +42,7 @@ public class QueryService {
 
             try {
                 if (existsByQueryMd5(queryMd5)) {
-                    log.put(""+i++, "Error: sql statement already exists " + queryMd5);
+                    log.put(""+i++, "Error sql statement already exists " + queryMd5);
                     continue;
                 }
 
@@ -60,9 +60,9 @@ public class QueryService {
                 log.put(""+i++, query);
 
             } catch (JsonProcessingException e) {
-                log.put(""+i++, "Error: processing parameters for query " + queryMd5 + ": " + e.getMessage());
+                log.put(""+i++, "Error processing parameters for query " + queryMd5 + ": " + e.getMessage());
             } catch (Exception e) {
-                log.put(""+i++, "Error: saving query " + queryMd5 + ": " + e.getMessage());
+                log.put(""+i++, "Error saving query " + queryMd5 + ": " + e.getMessage());
             }
         }
 
@@ -94,13 +94,13 @@ public class QueryService {
 
         for (String param : sqlParams) {
             if (!parameters.containsKey(param)) {
-                throw new IllegalArgumentException("El parámetro '" + param + "' en el SQL no está presente en los parametros.");
+                throw new IllegalArgumentException("Error, the parameter '" + param + "' in the SQL is not defined in the parameters key.");
             }
         }
 
         for (String paramKey : parameters.keySet()) {
             if (!sqlParams.contains(paramKey)) {
-                throw new IllegalArgumentException("El parámetro '" + paramKey + "' en los parametros no aparece en el SQL.");
+                throw new IllegalArgumentException("Error, the parameter '" + paramKey + "' is not defined in the SQL statement");
             }
         }
 
