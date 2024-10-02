@@ -1,16 +1,21 @@
 package com.boctool.webservice_engine.service;
 
+import com.boctool.webservice_engine.controller.RequestController;
 import com.boctool.webservice_engine.entity.Query;
 import com.boctool.webservice_engine.entity.QueryDTO;
 import com.boctool.webservice_engine.repository.QueryRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.boctool.webservice_engine.utils.Utilities.*;
 
@@ -23,9 +28,7 @@ public class QueryService {
     public QueryService(QueryRepository queryRepository) {
         this.queryRepository = queryRepository;
     }
-
-    private static final Set<String> ALLOWED_TYPES = Set.of("char", "integer", "date", "datetime");
-
+    private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
 
     public ResponseEntity<Object> saveQueries(List<QueryDTO> queryDTOS){
         Map<String, Object> log = new HashMap<>();
@@ -42,6 +45,8 @@ public class QueryService {
                     log.put(""+i++, "Error: sql statement already exists " + queryMd5);
                     continue;
                 }
+
+                validateQuery(sql, parameters);
 
                 validateInputTypeParameters(parameters);
 
@@ -75,5 +80,30 @@ public class QueryService {
 
     public void deleteAllQueries() {
         queryRepository.deleteAll();
+    }
+
+
+    private void validateQuery(String sql, Map<String, String> parameters) {
+        Pattern pattern = Pattern.compile("\\{\\{(.*?)\\}\\}");
+        Matcher matcher = pattern.matcher(sql);
+        Set<String> sqlParams = new HashSet<>();
+
+        while (matcher.find()) {
+            sqlParams.add(matcher.group(1));
+        }
+
+        for (String param : sqlParams) {
+            if (!parameters.containsKey(param)) {
+                throw new IllegalArgumentException("El parámetro '" + param + "' en el SQL no está presente en los parametros.");
+            }
+        }
+
+        for (String paramKey : parameters.keySet()) {
+            if (!sqlParams.contains(paramKey)) {
+                throw new IllegalArgumentException("El parámetro '" + paramKey + "' en los parametros no aparece en el SQL.");
+            }
+        }
+
+        logger.info("Parameters validated successfully");
     }
 }
