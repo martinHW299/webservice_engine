@@ -53,15 +53,22 @@ public class Utilities {
     public static String replaceParameters(String query, Map<String, Object> parameters) {
         Pattern pattern = Pattern.compile("\\{\\{(\\w+)\\}\\}");
         Matcher matcher = pattern.matcher(query);
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         while (matcher.find()) {
             String paramName = matcher.group(1);
             Object paramValue = parameters.get(paramName);
 
             if (paramValue != null) {
-                String paramValueStr = paramValue.toString();
-                matcher.appendReplacement(buffer, "'" + paramValueStr + "'");
+                String paramValueStr;
+
+                if (paramValue instanceof Number) {
+                    paramValueStr = paramValue.toString();
+                } else {
+                    paramValueStr = "'" + paramValue.toString() + "'";
+                }
+
+                matcher.appendReplacement(buffer, paramValueStr);
             } else {
                 throw new RuntimeException("Parameter " + paramName + " not found in provided parameters");
             }
@@ -70,6 +77,7 @@ public class Utilities {
         matcher.appendTail(buffer);
         return buffer.toString();
     }
+
 
     public static String normalizeSql(String sql) {
         if (sql== null) {
