@@ -11,8 +11,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/source")
 public class SourceController {
-    @Autowired
-    private SourceService sourceService;
+
+    private final SourceService sourceService;
+
+    public SourceController(SourceService sourceService) {
+        this.sourceService = sourceService;
+    }
 
     @GetMapping
     public List<Source> findAllSources() {

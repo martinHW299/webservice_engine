@@ -15,19 +15,14 @@ public class Request {
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "REQUEST_ID", updatable = false, nullable = false)
     private String requestId;
-
     @Column(name = "REQUEST_QUERY_ID")
     private String requestQueryId;
-
     @Column(name = "REQUEST_QUERY_VALUES", length = 2000)
     private String requestQueryValues;
-
     @Column(name = "REQUEST_SOURCE_ID")
     private String requestSourceId;
-
     @Column(name = "REQUEST_STATUS", nullable = false)
-    private String requestStatus = "PE";  // Default value
-
+    private String requestStatus = "PE";//AC,HI,EL,AN
     @CreationTimestamp
     @Temporal(TemporalType.DATE)
     @Column(name = "REQUEST_REGDATE", updatable = false)

@@ -14,8 +14,11 @@ import java.util.List;
 @RequestMapping("api/response")
 public class ResponseController {
 
-    @Autowired
-    ResponseService responseService;
+    final ResponseService responseService;
+
+    public ResponseController(ResponseService responseService) {
+        this.responseService = responseService;
+    }
 
     @GetMapping
     public List<Response> findAllResponses(){

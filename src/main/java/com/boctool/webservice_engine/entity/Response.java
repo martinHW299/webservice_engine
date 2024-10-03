@@ -14,39 +14,26 @@ public class Response {
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "RESPONSE_ID", updatable = false, nullable = false)
     private String responseId;
-
     @CreationTimestamp
     @Temporal(TemporalType.DATE)
     @Column(name = "RESPONSE_REGDATE")
     private Date responseRegdate;
-
     @Column(name = "RESPONSE_RUNTIME")
     private Double responseRuntime;
-
     @Column(name = "RESPONSE_CODE")
     private Integer responseCode;
-
     @Column(name = "RESPONSE_MESSAGE", length = 2000)
     private String responseMessage;
-
-//    @Column(name = "RESPONSE_DATA", length = 4000)
-//    private String responseData;
-
     @Column(name = "RESPONSE_SOURCE_ID")
     private String responseSourceId;
-
     @Column(name = "RESPONSE_QUERY_ID")
     private String responseQueryId;
-
     @Column(name = "RESPONSE_QUERY_MD5")
     private String responseQueryMd5;
-
     @Column(name = "RESPONSE_QUERY_TEXT", length = 4000)
     private String responseQueryText;
-
     @Column(name = "RESPONSE_QUERY_PARAMS", length = 4000)
     private String responseQueryParams;
-
     @Column(name = "RESPONSE_QUERY_VALUES", length = 4000)
     private String responseQueryValues;
 
@@ -89,14 +76,6 @@ public class Response {
     public void setResponseMessage(String responseMessage) {
         this.responseMessage = responseMessage;
     }
-
-//    public String getResponseData() {
-//        return responseData;
-//    }
-//
-//    public void setResponseData(String responseData) {
-//        this.responseData = responseData;
-//    }
 
     public String getResponseSourceId() {
         return responseSourceId;

@@ -14,8 +14,11 @@ import java.util.List;
 @RequestMapping("api/request")
 public class RequestController {
 
-    @Autowired
-    RequestService requestService;
+    final RequestService requestService;
+
+    public RequestController(RequestService requestService) {
+        this.requestService = requestService;
+    }
 
     @GetMapping
     public List<Request> findAllRequests() {

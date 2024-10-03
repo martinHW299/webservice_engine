@@ -7,12 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface QueryRepository extends JpaRepository<Query, String> {
     Query findQueryByQueryMd5(String md5);
-
     boolean existsQueryByQueryMd5(String md5);
-
     boolean existsByQueryId(String id);
-
     Query findQueryByQueryId(String id);
-
-
 }

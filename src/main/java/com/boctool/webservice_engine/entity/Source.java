@@ -26,16 +26,14 @@ public class Source {
     private Integer sourcePool = 2;
     @Column(name = "SOURCE_REGDATE", updatable = false)
     private LocalDate sourceRegdate = LocalDate.now();
-    //default 'PE' -- AC,HI,EL,AN
     @Column(name = "SOURCE_STATUS", length = 2)
-    private String sourceStatus = "PE";
+    private String sourceStatus = "PE";//AC,HI,EL,AN
     @Column(name = "SOURCE_TIMEOUT")
     private long sourceTimeout = 20000;
     @Column(name = "SOURCE_IDLETIMEOUT")
     private long sourceIdletimeout = 300000;
     @Column(name = "SOURCE_MAXLIFETIME")
     private long sourceMaxlifetime = 900000;
-
 
     public String getSourceId() {
         return sourceId;

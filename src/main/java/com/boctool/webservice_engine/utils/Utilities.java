@@ -9,17 +9,6 @@ import java.util.regex.Pattern;
 
 public class Utilities {
 
-    private static final Set<String> ALLOWED_TYPES = Set.of("char", "integer", "date", "datetime");
-
-    public static void validateInputTypeParameters(Map<String, String> parameters) {
-        for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            String paramType = entry.getValue().toLowerCase();
-            if (!ALLOWED_TYPES.contains(paramType)) {
-                throw new IllegalArgumentException("Invalid parameter type: " + paramType + " for key: " + entry.getKey());
-            }
-        }
-    }
-
     public static String determineQueryType(String query) {
         String trimmedQuery = query.trim().toUpperCase();
         if (trimmedQuery.startsWith("SELECT")) {
@@ -35,7 +24,7 @@ public class Utilities {
         }
     }
 
-    public static String convertQueryToMD5(String query){
+    public static String convertTextToMd5(String query){
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] digest = md.digest(query.getBytes());

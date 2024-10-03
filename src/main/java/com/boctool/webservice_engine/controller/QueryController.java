@@ -17,8 +17,11 @@ import java.util.Map;
 @RequestMapping("api/query")
 public class QueryController {
 
-    @Autowired
-    QueryService queryService;
+    final QueryService queryService;
+
+    public QueryController(QueryService queryService) {
+        this.queryService = queryService;
+    }
 
 
     @GetMapping

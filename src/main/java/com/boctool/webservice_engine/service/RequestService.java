@@ -27,25 +27,22 @@ import static com.boctool.webservice_engine.utils.Utilities.*;
 @Service
 public class RequestService {
 
-    @Autowired
-    RequestRepository requestRepository;
+    final RequestRepository requestRepository;
+    final QueryRepository queryRepository;
+    final SourceService sourceService;
+    final ResponseRepository responseRepository;
+    final SourceRepository sourceRepository;
 
-    @Autowired
-    QueryRepository queryRepository;
-
-    @Autowired
-    SourceService sourceService;
-
-    @Autowired
-    ResponseRepository responseRepository;
-
-    @Autowired
-    SourceRepository sourceRepository;
+    public RequestService(RequestRepository requestRepository, QueryRepository queryRepository, SourceService sourceService, ResponseRepository responseRepository, SourceRepository sourceRepository) {
+        this.requestRepository = requestRepository;
+        this.queryRepository = queryRepository;
+        this.sourceService = sourceService;
+        this.responseRepository = responseRepository;
+        this.sourceRepository = sourceRepository;
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
-
     private final ObjectMapper objectMapper = new ObjectMapper();
-
     public List<Request> findAllRequests() {
         return requestRepository.findAll();
     }
@@ -65,7 +62,6 @@ public class RequestService {
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);
     }
 
-    // Execute a single query and return ResponseDTO
     public ResponseDTO executeQuery(RequestDTO requestDTO, int i) {
         ResponseDTO responseDTO = new ResponseDTO();
         String queryId = requestDTO.getSqlId();
@@ -79,33 +75,26 @@ public class RequestService {
         String finalQuery = null;
 
         try {
-            // Validate inputs
             validateElementsForExecution(queryId, sourceId, requestParams);
 
-            // Fetch query details from the repository
             Query query = queryRepository.findQueryByQueryId(queryId);
             logger.info("Executing query: {}", query);
 
-            // Determine if it's a SELECT query
             boolean isSelect = determineQueryType(query.getQueryText()).equals("SELECT");
 
-            // Get the datasource and set up JdbcTemplate
             DataSource dataSource = sourceService.getDataSourceById(sourceId);
             JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
-            // Parse and validate parameters
             queryParams = objectMapper.readValue(query.getQueryParams(), new TypeReference<HashMap<String, String>>() {
             });
             validateParameters(queryParams, requestParams);
 
-            // Build the final query
             finalQuery = replaceParameters(query.getQueryText(), requestParams);
             logger.info("Final Query: {}", finalQuery);
             logger.info("Parameters: {}", requestParams);
 
             long startTime = System.currentTimeMillis();
 
-            // Execute the query
             if (isSelect) {
                 resultList = jdbcTemplate.queryForList(finalQuery);
                 affectedRows = resultList.size();
@@ -119,7 +108,6 @@ public class RequestService {
             long endTime = System.currentTimeMillis();
             double runtime = (endTime - startTime) / 1000.0;
 
-            // Build the response
             responseDTO.setCode(200);
             responseDTO.setStatus("SUCCESS");
             responseDTO.setRowCount(affectedRows);
@@ -152,7 +140,6 @@ public class RequestService {
         return responseDTO;
     }
 
-    // Method to save the request log in the database
     private void saveResponse(double runtime, String queryId, String sourceId, String queryMd5, String finalQuery, Map<String, String> queryParams, Map<String, Object> requestParams) {
         Response response = new Response();
         response.setResponseRuntime(runtime);

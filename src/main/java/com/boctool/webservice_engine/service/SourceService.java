@@ -17,22 +17,19 @@ import java.util.Map;
 @Service
 public class SourceService {
 
-    @Autowired
-    private SourceRepository sourceRepository;
+    private final SourceRepository sourceRepository;
+
+    public SourceService(SourceRepository sourceRepository) {
+        this.sourceRepository = sourceRepository;
+    }
 
     @PostConstruct
     public void init() {
         loadAllSources();  // Load connections
     }
 
-    //Map of DataSource
     Map<String, DataSource> dataSourceMap = new HashMap<>();
     private static final String PASSPHRASE = "nothingIsFullySecured";
-
-    /*
-    @Value("${encryption.passphrase}")
-    private String passphrase;
-    */ // Load passphrase from an environment variable or secure location
 
     public void loadAllSources(){
         List<Source> sources = sourceRepository.findAll();
@@ -51,19 +48,11 @@ public class SourceService {
             }
             hikariConfig.setPassword(decryptedPassword);
             hikariConfig.setUsername(decryptedUsr);
-
             hikariConfig.setMaximumPoolSize(source.getSourcePool());
             hikariConfig.setMinimumIdle(source.getSourcePool() / 2);
-
-            //hikariConfig.setConnectionTimeout(30000);  // 30 segundos
-            hikariConfig.setConnectionTimeout(source.getSourceTimeout());  // 30 segundos
-
-            //hikariConfig.setIdleTimeout(600000);       // 10 minutos
-            hikariConfig.setIdleTimeout(source.getSourceIdletimeout());       // 10 minutos
-
-            //hikariConfig.setMaxLifetime(1800000);      // 30 minutos
-            hikariConfig.setMaxLifetime(source.getSourceMaxlifetime());      // 30 minutos
-
+            hikariConfig.setConnectionTimeout(source.getSourceTimeout());
+            hikariConfig.setIdleTimeout(source.getSourceIdletimeout());
+            hikariConfig.setMaxLifetime(source.getSourceMaxlifetime());
 
             HikariDataSource dataSource = new HikariDataSource(hikariConfig);
 
@@ -71,14 +60,9 @@ public class SourceService {
         }
     }
 
-    // Get DataSource by sourceId
     public DataSource getDataSourceById(String sourceId) {
         return dataSourceMap.get(sourceId);
     }
-
-
-
-
 
     public void saveSource(Source source) throws Exception {
         String encryptedPassword =  EncryptionUtils.encrypt(source.getSourcePwd(), PASSPHRASE);
@@ -101,15 +85,12 @@ public class SourceService {
     public List<Source> findAllSources() {
         return sourceRepository.findAll();
     }
-
     public Source findSourceById(String sourceId) {
         return sourceRepository.findSourceBySourceId(sourceId);
     }
-
     public void deleteAllSources(){
         sourceRepository.deleteAll();
     }
-
     public List<Source> findSourcesByStatus(String status){
         return sourceRepository.findSourceBySourceStatus(status);
     }

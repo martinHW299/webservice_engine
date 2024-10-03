@@ -21,10 +21,8 @@ public class Query {
     private String queryText;
     @Column(name = "QUERY_PARAMS", length = 4000)
     private String queryParams;
-
-    //default 'PE' -- AC,HI,EL,AN
     @Column(name = "QUERY_STATUS", length = 2)
-    private String queryStatus = "PE";
+    private String queryStatus = "PE"; //AC,HI,EL,AN
     @CreationTimestamp
     @Temporal(TemporalType.DATE)
     @Column(name = "QUERY_REGDATE")

@@ -22,12 +22,23 @@ import static com.boctool.webservice_engine.utils.Utilities.*;
 @Service
 public class QueryService {
 
-    @Autowired
     private final QueryRepository queryRepository;
 
     public QueryService(QueryRepository queryRepository) {
         this.queryRepository = queryRepository;
     }
+
+    private static final Set<String> ALLOWED_TYPES = Set.of("char", "integer", "date", "datetime");
+
+    public static void validateInputTypeParameters(Map<String, String> parameters) {
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            String paramType = entry.getValue().toLowerCase();
+            if (!ALLOWED_TYPES.contains(paramType)) {
+                throw new IllegalArgumentException("Invalid parameter type: " + paramType + " for key: " + entry.getKey());
+            }
+        }
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
 
     public ResponseEntity<Object> saveQueries(List<QueryDTO> queryDTOS){
@@ -38,7 +49,7 @@ public class QueryService {
             String sql = queryDTO.getSql();
             Map<String, String> parameters = queryDTO.getParameters();
             String queryText = normalizeSql(sql);
-            String queryMd5 = convertQueryToMD5(queryText);
+            String queryMd5 = convertTextToMd5(queryText);
 
             try {
                 if (existsByQueryMd5(queryMd5)) {
@@ -69,20 +80,6 @@ public class QueryService {
         return new ResponseEntity<>(log, HttpStatus.OK);
     }
 
-
-    public boolean existsByQueryMd5(String queryMd5) {
-        return queryRepository.findQueryByQueryMd5(queryMd5) != null;
-    }
-
-    public List<Query> findAllQueries() {
-        return queryRepository.findAll();
-    }
-
-    public void deleteAllQueries() {
-        queryRepository.deleteAll();
-    }
-
-
     private void validateQuery(String sql, Map<String, String> parameters) {
         Pattern pattern = Pattern.compile("\\{\\{(.*?)\\}\\}");
         Matcher matcher = pattern.matcher(sql);
@@ -106,4 +103,17 @@ public class QueryService {
 
         logger.info("Parameters validated successfully");
     }
+
+    public boolean existsByQueryMd5(String queryMd5) {
+        return queryRepository.findQueryByQueryMd5(queryMd5) != null;
+    }
+
+    public List<Query> findAllQueries() {
+        return queryRepository.findAll();
+    }
+
+    public void deleteAllQueries() {
+        queryRepository.deleteAll();
+    }
+
 }
