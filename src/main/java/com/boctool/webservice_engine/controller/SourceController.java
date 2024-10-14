@@ -39,7 +39,7 @@ public class SourceController {
     }
 
     @PostMapping("/deleteAll")
-    public void deleteAllSources(){
+    public void deleteAllSources() {
         sourceService.deleteAllSources();
     }
 }

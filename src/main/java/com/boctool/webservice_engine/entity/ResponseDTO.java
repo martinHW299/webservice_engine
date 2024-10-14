@@ -7,10 +7,12 @@ public class ResponseDTO {
     private String status;
     private String message;
     private int rowCount;
-    private Object data;
     private double runtime;
+    private Object data;
 
-    public int getCode() {return code;}
+    public int getCode() {
+        return code;
+    }
 
     public void setCode(int code) {
         this.code = code;
@@ -32,9 +34,13 @@ public class ResponseDTO {
         this.message = message;
     }
 
-    public int getRowCount() {return rowCount;}
+    public int getRowCount() {
+        return rowCount;
+    }
 
-    public void setRowCount(int rowCount) {this.rowCount = rowCount;}
+    public void setRowCount(int rowCount) {
+        this.rowCount = rowCount;
+    }
 
     public Object getData() {
         return data;

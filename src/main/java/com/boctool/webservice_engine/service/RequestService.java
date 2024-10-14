@@ -21,18 +21,21 @@ import javax.sql.DataSource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.boctool.webservice_engine.utils.Utilities.*;
 
 @Service
 public class RequestService {
 
-    final RequestRepository requestRepository;
-    final QueryRepository queryRepository;
-    final SourceService sourceService;
-    final ResponseRepository responseRepository;
-    final SourceRepository sourceRepository;
+    private final RequestRepository requestRepository;
+    private final QueryRepository queryRepository;
+    private final SourceService sourceService;
+    private final ResponseRepository responseRepository;
+    private final SourceRepository sourceRepository;
 
+    @Autowired
     public RequestService(RequestRepository requestRepository, QueryRepository queryRepository, SourceService sourceService, ResponseRepository responseRepository, SourceRepository sourceRepository) {
         this.requestRepository = requestRepository;
         this.queryRepository = queryRepository;
@@ -43,6 +46,7 @@ public class RequestService {
 
     private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
+
     public List<Request> findAllRequests() {
         return requestRepository.findAll();
     }
@@ -111,9 +115,9 @@ public class RequestService {
             responseDTO.setCode(200);
             responseDTO.setStatus("SUCCESS");
             responseDTO.setRowCount(affectedRows);
+            responseDTO.setRuntime(runtime);
             responseDTO.setData(queryResult);
             responseDTO.setMessage("Query executed successfully");
-            responseDTO.setRuntime(runtime);
 
             saveRequest(queryId, sourceId, requestParams, finalQuery);
             saveResponse(runtime, queryId, sourceId, query.getQueryMd5(), finalQuery, queryParams, requestParams);
@@ -140,39 +144,6 @@ public class RequestService {
         return responseDTO;
     }
 
-    private void saveResponse(double runtime, String queryId, String sourceId, String queryMd5, String finalQuery, Map<String, String> queryParams, Map<String, Object> requestParams) {
-        Response response = new Response();
-        response.setResponseRuntime(runtime);
-        response.setResponseCode(200);
-        response.setResponseMessage("Query executed successfully");
-        response.setResponseSourceId(sourceId);
-        response.setResponseQueryId(queryId);
-        response.setResponseQueryMd5(queryMd5);
-        response.setResponseQueryText(finalQuery);
-        response.setResponseQueryParams(queryParams.toString());
-        response.setResponseQueryValues(requestParams.toString());
-        responseRepository.save(response); // Save response in the request
-    }
-
-    private void saveResponseError(int code, String sqlId, String sourceId, Map<String, Object> requestParams, String finalQuery, String message) {
-        Response response = new Response();
-        response.setResponseCode(code);
-        response.setResponseMessage(message);
-        response.setResponseSourceId(sourceId);
-        response.setResponseQueryId(sqlId);
-        response.setResponseQueryText(finalQuery);
-        response.setResponseQueryValues(requestParams.toString());
-        responseRepository.save(response); // Save response in the request
-    }
-
-    private void saveRequest(String sqlId, String sourceId, Map<String, Object> requestParams, String finalQuery) {
-        Request request = new Request();
-        request.setRequestQueryId(sqlId);
-        request.setRequestRegdate(new Date());
-        request.setRequestSourceId(sourceId);
-        request.setRequestQueryValues(requestParams.toString());
-        requestRepository.save(request);
-    }
 
     private void validateElementsForExecution(String sqlId, String sourceId, Map<String, Object> requestParams) {
         if (sqlId != null && sourceId != null && requestParams != null) {
@@ -193,8 +164,82 @@ public class RequestService {
         }
     }
 
-    private void validateParameters(Map<String, String> queryParams, Map<String, Object> requestParams){
-        for(Map.Entry<String, String> entry : queryParams.entrySet()) {
+    private String replaceParameters(String query, Map<String, Object> parameters) {
+        Pattern pattern = Pattern.compile(REGEX_BRACE_PATTER);
+        Matcher matcher = pattern.matcher(query);
+        StringBuilder builder = new StringBuilder();
+
+        while (matcher.find()) {
+            String paramName = matcher.group(1);
+            Object paramValue = parameters.get(paramName);
+
+            if (paramValue != null) {
+                String paramValueStr;
+
+                if (paramValue instanceof List<?> paramList) {
+                    if (!paramList.isEmpty() && paramList.get(0) instanceof String) {
+                        paramValueStr = paramList.stream().map(item -> "'" + item.toString() + "'")  // Wrap in quotes
+                                .reduce((a, b) -> a + ", " + b).orElse("");
+                    } else {
+                        // Handle array_integer: no quotes, just join with commas
+                        paramValueStr = paramList.stream().map(Object::toString).reduce((a, b) -> a + ", " + b).orElse("");
+                    }
+                } else if (paramValue instanceof Number) {
+                    paramValueStr = paramValue.toString();
+                } else if (isFunction(paramValue.toString())) {
+                    paramValueStr = paramValue.toString();
+                } else {
+                    paramValueStr = "'" + paramValue.toString() + "'";
+                }
+
+                matcher.appendReplacement(builder, paramValueStr);
+            } else {
+                throw new RuntimeException("Parameter " + paramName + " not found in provided parameters");
+            }
+        }
+
+        matcher.appendTail(builder);
+        return builder.toString();
+    }
+
+
+    private void saveResponse(double runtime, String queryId, String sourceId, String queryMd5, String finalQuery, Map<String, String> queryParams, Map<String, Object> requestParams) {
+        Response response = new Response();
+        response.setResponseRuntime(runtime);
+        response.setResponseCode(200);
+        response.setResponseMessage("Query executed successfully");
+        response.setResponseSourceId(sourceId);
+        response.setResponseQueryId(queryId);
+        response.setResponseQueryMd5(queryMd5);
+        response.setResponseQueryText(finalQuery);
+        response.setResponseQueryParams(queryParams.toString());
+        response.setResponseQueryValues(requestParams.toString());
+        responseRepository.save(response); // Save response in the request
+    }
+
+    private void saveResponseError(int code, String sqlId, String sourceId, Map<String, Object> requestParams, String finalQuery, String message) {
+        Response response = new Response();
+        response.setResponseCode(code);
+        response.setResponseMessage(null);
+        response.setResponseSourceId(sourceId);
+        response.setResponseQueryId(sqlId);
+        response.setResponseQueryText(finalQuery);
+        response.setResponseQueryValues(requestParams.toString());
+        responseRepository.save(response); // Save response in the request
+    }
+
+    private void saveRequest(String sqlId, String sourceId, Map<String, Object> requestParams, String finalQuery) {
+        Request request = new Request();
+        request.setRequestQueryId(sqlId);
+        request.setRequestRegdate(new Date());
+        request.setRequestSourceId(sourceId);
+        request.setRequestQueryValues(requestParams.toString());
+        requestRepository.save(request);
+    }
+
+    private void validateParameters(Map<String, String> queryParams, Map<String, Object> requestParams) {
+
+        for (Map.Entry<String, String> entry : queryParams.entrySet()) {
             String paramName = entry.getKey();
             String expectedType = entry.getValue();
             Object paramValue = requestParams.get(paramName);
@@ -202,10 +247,14 @@ public class RequestService {
             if (paramValue == null) throw new IllegalArgumentException("Parameter " + paramName + " is missing");
 
             boolean isValid = switch (expectedType) {
-                case "char" -> paramValue instanceof String;
-                case "integer" -> paramValue instanceof Integer;
+                case "char", "function" -> paramValue instanceof String;
+                case "integer" -> paramValue instanceof Integer || paramValue instanceof Long;
                 case "date" -> paramValue instanceof Date || isValidDate(paramValue.toString());
                 case "datetime" -> paramValue instanceof Date || isValidDateTime(paramValue.toString());
+                case "array_char" ->
+                        paramValue instanceof List<?> && allElementsAreOfType((List<?>) paramValue, String.class);
+                case "array_integer" ->
+                        paramValue instanceof List<?> && allElementsAreOfType((List<?>) paramValue, Integer.class);
                 default -> false;
             };
 
@@ -224,6 +273,7 @@ public class RequestService {
         }
     }
 
+
     private boolean isValidDateTime(String datetimestr) {
         try {
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(datetimestr);
@@ -233,7 +283,34 @@ public class RequestService {
         }
     }
 
-    public void deleteAllRequests(){
+
+//    private boolean isFunction(String value) {
+//        List<String> knownFunctions = List.of("TRUNC", "TO_DATE", "ADD_MONTHS", "F_USER_ID");
+//
+//        for (String function : knownFunctions) {
+//            if (value.toUpperCase().startsWith(function.toUpperCase() + "(") && value.endsWith(")")) {
+//                return true;
+//            }
+//        }
+//        return value.matches("^[a-zA-Z_]+\\(.*\\)$");
+//    }
+
+    private boolean isFunction(String value) {
+        String functionPattern = "^[a-zA-Z_]+\\(.*\\)$";
+        return value.matches(functionPattern);
+    }
+
+
+    private boolean allElementsAreOfType(List<?> list, Class<?> expectedType) {
+        for (Object element : list) {
+            if (!expectedType.isInstance(element)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void deleteAllRequests() {
         requestRepository.deleteAll();
     }
 }

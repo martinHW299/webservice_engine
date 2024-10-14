@@ -31,7 +31,7 @@ public class RequestController {
     }
 
     @PostMapping("/deleteAll")
-    public void deleteAllRequests(){
+    public void deleteAllRequests() {
         requestService.deleteAllRequests();
     }
 }

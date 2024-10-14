@@ -23,7 +23,6 @@ public class QueryController {
         this.queryService = queryService;
     }
 
-
     @GetMapping
     public List<Query> findAllSources() {
         return queryService.findAllQueries();
@@ -35,7 +34,7 @@ public class QueryController {
     }
 
     @PostMapping("/deleteAll")
-    public void deleteAllQueries(){
+    public void deleteAllQueries() {
         queryService.deleteAllQueries();
     }
 

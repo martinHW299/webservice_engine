@@ -10,17 +10,18 @@ import java.util.List;
 @Service
 public class ResponseService {
 
-    final ResponseRepository responseRepository;
+    private final ResponseRepository responseRepository;
 
+    @Autowired
     public ResponseService(ResponseRepository responseRepository) {
         this.responseRepository = responseRepository;
     }
 
-    public void deleteAllResponses(){
+    public void deleteAllResponses() {
         responseRepository.deleteAll();
     }
 
-    public List<Response> findAllResponses(){
+    public List<Response> findAllResponses() {
         return responseRepository.findAll();
     }
 }

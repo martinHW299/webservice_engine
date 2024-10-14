@@ -21,12 +21,12 @@ public class ResponseController {
     }
 
     @GetMapping
-    public List<Response> findAllResponses(){
+    public List<Response> findAllResponses() {
         return responseService.findAllResponses();
     }
 
     @PostMapping("/deleteAll")
-    public void deleteAllResponses(){
+    public void deleteAllResponses() {
         responseService.deleteAllResponses();
     }
 }

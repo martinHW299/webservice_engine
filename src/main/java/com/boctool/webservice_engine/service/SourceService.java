@@ -1,11 +1,14 @@
 package com.boctool.webservice_engine.service;
 
+import com.boctool.webservice_engine.controller.RequestController;
 import com.boctool.webservice_engine.entity.Source;
 import com.boctool.webservice_engine.repository.SourceRepository;
 import com.boctool.webservice_engine.utils.EncryptionUtils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +22,12 @@ public class SourceService {
 
     private final SourceRepository sourceRepository;
 
+    @Autowired
     public SourceService(SourceRepository sourceRepository) {
         this.sourceRepository = sourceRepository;
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
     @PostConstruct
     public void init() {
         loadAllSources();  // Load connections
@@ -31,9 +36,9 @@ public class SourceService {
     Map<String, DataSource> dataSourceMap = new HashMap<>();
     private static final String PASSPHRASE = "nothingIsFullySecured";
 
-    public void loadAllSources(){
+    public void loadAllSources() {
         List<Source> sources = sourceRepository.findAll();
-        System.out.println("Sources list: "+ sources);
+        System.out.println("Sources list: " + sources);
         for (Source source : sources) {
             HikariConfig hikariConfig = new HikariConfig();
             hikariConfig.setDriverClassName("oracle.jdbc.OracleDriver");
@@ -49,13 +54,14 @@ public class SourceService {
             hikariConfig.setPassword(decryptedPassword);
             hikariConfig.setUsername(decryptedUsr);
             hikariConfig.setMaximumPoolSize(source.getSourcePool());
-            hikariConfig.setMinimumIdle(source.getSourcePool() / 2);
+            hikariConfig.setMinimumIdle(source.getSourcePool() / 2); //columna
             hikariConfig.setConnectionTimeout(source.getSourceTimeout());
             hikariConfig.setIdleTimeout(source.getSourceIdletimeout());
             hikariConfig.setMaxLifetime(source.getSourceMaxlifetime());
+            hikariConfig.setAutoCommit(false);
 
             HikariDataSource dataSource = new HikariDataSource(hikariConfig);
-
+            logger.info("Connection up: ",source.getSourceUrl());
             dataSourceMap.put(source.getSourceId(), dataSource);
         }
     }
@@ -65,7 +71,7 @@ public class SourceService {
     }
 
     public void saveSource(Source source) throws Exception {
-        String encryptedPassword =  EncryptionUtils.encrypt(source.getSourcePwd(), PASSPHRASE);
+        String encryptedPassword = EncryptionUtils.encrypt(source.getSourcePwd(), PASSPHRASE);
         String encryptedSourceUsr = EncryptionUtils.encrypt(source.getSourceUsr(), PASSPHRASE);
         source.setSourceUsr(encryptedSourceUsr);
         source.setSourcePwd(encryptedPassword);
@@ -75,7 +81,7 @@ public class SourceService {
     public void saveListOfSources(List<Source> sources) {
         for (Source source : sources) {
             try {
-                saveSource(source);  // Encrypt and save each source
+                saveSource(source);
             } catch (Exception e) {
                 System.err.println("Failed to save source with ID: " + source.getSourceId() + ". Error: " + e.getMessage());
             }
@@ -85,13 +91,16 @@ public class SourceService {
     public List<Source> findAllSources() {
         return sourceRepository.findAll();
     }
+
     public Source findSourceById(String sourceId) {
         return sourceRepository.findSourceBySourceId(sourceId);
     }
-    public void deleteAllSources(){
+
+    public void deleteAllSources() {
         sourceRepository.deleteAll();
     }
-    public List<Source> findSourcesByStatus(String status){
+
+    public List<Source> findSourcesByStatus(String status) {
         return sourceRepository.findSourceBySourceStatus(status);
     }
 }
