@@ -102,8 +102,8 @@ public class RequestService {
             if (isSelect) {
                 resultList = jdbcTemplate.queryForList(finalQuery);
                 affectedRows = resultList.size();
-                queryResult = resultList;
-                System.out.println("Result query: " + resultList);
+                queryResult = lowerCaseJsonKey(resultList);
+                logger.info("Result query: {}", resultList);
             } else {
                 affectedRows = jdbcTemplate.update(finalQuery);
                 queryResult = Collections.singletonMap("updateCount", affectedRows);

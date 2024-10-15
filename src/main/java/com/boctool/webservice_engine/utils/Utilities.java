@@ -2,8 +2,7 @@ package com.boctool.webservice_engine.utils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,5 +38,17 @@ public class Utilities {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("MD5 algorithm not found", e);
         }
+    }
+
+    public static List<Map<String, Object>> lowerCaseJsonKey(List<Map<String, Object>> json) {
+        List<Map<String, Object>> lowerCasedJsonKey = new ArrayList<>();
+        for (Map<String, Object> row : json) {
+            Map<String, Object> lowerCaseRow = new HashMap<>();
+            for (Map.Entry<String, Object> entry : row.entrySet()) {
+                lowerCaseRow.put(entry.getKey().toLowerCase(), entry.getValue());
+            }
+            lowerCasedJsonKey.add(lowerCaseRow);
+        }
+        return lowerCasedJsonKey;
     }
 }
