@@ -140,4 +140,7 @@ public class QueryService {
         queryRepository.deleteAll();
     }
 
+    public Query findQueryById(String id) {
+        return queryRepository.findQueryByQueryId(id);
+    }
 }

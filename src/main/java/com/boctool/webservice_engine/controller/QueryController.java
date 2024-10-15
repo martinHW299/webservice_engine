@@ -33,6 +33,11 @@ public class QueryController {
         return queryService.saveQueries(queryDTOS);
     }
 
+    @GetMapping("/{id}")
+    public Query findQueryById(@PathVariable String id){
+        return queryService.findQueryById(id);
+    }
+
     @PostMapping("/deleteAll")
     public void deleteAllQueries() {
         queryService.deleteAllQueries();
