@@ -42,30 +42,31 @@ public class QueryService {
             Map<String, String> parameters = queryDTO.getParameters();
             String normalizedQueryText = normalizeSql(sql);
             String queryMd5 = convertTextToMd5(normalizedQueryText);
+            logger.info(queryMd5);
 
             try {
                 if (existsByQueryMd5(queryMd5)) {
-                    log.put("" + i++, "Error sql statement already exists " + queryMd5);
+                    Query query = findQueryByMd5(queryMd5);
+                    log.put("Warning Obj " + i++ + " already exists", query);
                     continue;
                 }
 
                 validateQuery(sql, parameters);
-
                 validateInputTypeParameters(parameters);
 
                 Query query = new Query();
                 query.setQueryMd5(queryMd5);
-                query.setQueryText(sql);
+                query.setQueryText(sql.replace(";", ""));
                 query.setQueryParams(new ObjectMapper().writeValueAsString(parameters));
                 query.setQueryRegdate(new Date());
                 queryRepository.save(query);
 
-                log.put("" + i++, query);
+                log.put("Obj " + i++, query);
 
             } catch (JsonProcessingException e) {
-                log.put("" + i++, "Error processing parameters for query " + queryMd5 + ": " + e.getMessage());
+                log.put("Error Obj " + i++, "Processing parameters for query {} " + e.getMessage());
             } catch (Exception e) {
-                log.put("" + i++, "Error saving query " + queryMd5 + ": " + e.getMessage());
+                log.put("Error Obj " + i++, "Saving query {} " + e.getMessage());
             }
         }
 
@@ -73,11 +74,8 @@ public class QueryService {
     }
 
     public static String normalizeSql(String sql) {
-
         sql = sql.replace(";", "");
-
         String[] parts = sql.split(REGEX_BRACE_PATTER);
-
         StringBuilder cleanSql = new StringBuilder();
 
         Pattern pattern = Pattern.compile(REGEX_BRACE_PATTER);
@@ -101,7 +99,7 @@ public class QueryService {
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String paramType = entry.getValue().toLowerCase();
             if (!ALLOWED_TYPES.contains(paramType)) {
-                throw new IllegalArgumentException("Invalid parameter type: " + paramType + " for key: " + entry.getKey());
+                throw new IllegalArgumentException("Invalid parameter type " + paramType + " for key " + entry.getKey());
             }
         }
     }
@@ -116,12 +114,12 @@ public class QueryService {
         }
         for (String param : sqlParams) {
             if (!parameters.containsKey(param)) {
-                throw new IllegalArgumentException("Error, the parameter '" + param + "' in the SQL is not defined in the parameters key.");
+                throw new IllegalArgumentException("Parameter '" + param + "' in the SQL is not defined in the parameters key");
             }
         }
         for (String paramKey : parameters.keySet()) {
             if (!sqlParams.contains(paramKey)) {
-                throw new IllegalArgumentException("Error, the parameter '" + paramKey + "' is not defined in the SQL statement");
+                throw new IllegalArgumentException("Parameter '" + paramKey + "' is not defined in the SQL statement");
             }
         }
 
@@ -142,5 +140,9 @@ public class QueryService {
 
     public Query findQueryById(String id) {
         return queryRepository.findQueryByQueryId(id);
+    }
+
+    public Query findQueryByMd5(String md5) {
+        return queryRepository.findQueryByQueryMd5(md5);
     }
 }

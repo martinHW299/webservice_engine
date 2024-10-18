@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -54,26 +55,28 @@ public class RequestService {
     public ResponseEntity<Object> executeListQueries(List<RequestDTO> requestDTOS) {
         Map<String, Object> log = new HashMap<>();
         List<ResponseDTO> responseDTOs = new ArrayList<>();
-        int i = 0;  // Initialize index for logging
+        int i = 0;
 
         for (RequestDTO requestDTO : requestDTOS) {
-            ResponseDTO responseDTO = executeQuery(requestDTO, i);  // Return ResponseDTO for each query
+            ResponseDTO responseDTO = executeQuery(requestDTO);
             responseDTOs.add(responseDTO);
             log.put("Query_" + i++, responseDTO.getMessage());
         }
-
         // Return the accumulated responses and log
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);
     }
 
-    public ResponseDTO executeQuery(RequestDTO requestDTO, int i) {
+    public ResponseDTO executeQuery(RequestDTO requestDTO) {
         ResponseDTO responseDTO = new ResponseDTO();
         String queryId = requestDTO.getSqlId();
         String sourceId = requestDTO.getSourceId();
         Map<String, Object> requestParams = requestDTO.getParameters();
+
         Map<String, String> queryParams = null;
-        Object queryResult = null;
+        int maxRows = 0;
+
         List<Map<String, Object>> resultList = null;
+        Object queryResult = null;
         int affectedRows;
 
         String finalQuery = null;
@@ -92,6 +95,13 @@ public class RequestService {
             queryParams = objectMapper.readValue(query.getQueryParams(), new TypeReference<HashMap<String, String>>() {
             });
             validateParameters(queryParams, requestParams);
+
+            maxRows = requestDTO.getMaxRows();
+            if (maxRows != 0) {
+                jdbcTemplate.setMaxRows(maxRows);
+            } else {
+                jdbcTemplate.setMaxRows(100);
+            }
 
             finalQuery = replaceParameters(query.getQueryText(), requestParams);
             logger.info("Final Query: {}", finalQuery);
@@ -125,19 +135,19 @@ public class RequestService {
         } catch (IllegalArgumentException e) {
             responseDTO.setCode(400);
             responseDTO.setStatus("FAILED");
-            String message = "Error validating request: " + queryId + ": " + e.getMessage();
+            String message = "Request error: " + e.getMessage();
             responseDTO.setMessage(message);
             saveResponseError(400, queryId, sourceId, requestParams, finalQuery, message);
         } catch (JsonProcessingException e) {
             responseDTO.setCode(400);
             responseDTO.setStatus("FAILED");
-            String message = "Error processing parameters for query " + queryId + ": " + e.getMessage();
+            String message = "Processing error: Parameters for query " + queryId + ": " + e.getMessage();
             responseDTO.setMessage(message);
             saveResponseError(400, queryId, sourceId, requestParams, null, message);
         } catch (Exception e) {
             responseDTO.setCode(500);
             responseDTO.setStatus("FAILED");
-            String message = "Error executing query " + queryId + ": " + e.getMessage();
+            String message = "Execution error {" + queryId + "} : " + e.getMessage();
             responseDTO.setMessage(message);
             saveResponseError(500, queryId, sourceId, requestParams, finalQuery, message);
         }
@@ -151,7 +161,7 @@ public class RequestService {
             boolean queryExists = queryRepository.existsByQueryId(sqlId);
             logger.info("Query exists: {}", queryExists);
             if (!queryExists) {
-                throw new IllegalArgumentException("Error SQL statement does not exist in the database: " + sqlId);
+                throw new IllegalArgumentException(sqlId + "does not exist in the database");
             }
             // Check if source exists in the database
             boolean sourceExists = sourceRepository.existsBySourceId(sourceId);
@@ -194,12 +204,12 @@ public class RequestService {
 
                 matcher.appendReplacement(builder, paramValueStr);
             } else {
-                throw new RuntimeException("Parameter " + paramName + " not found in provided parameters");
+                throw new RuntimeException("Parameter {{" + paramName + "}} not found in provided parameters");
             }
         }
 
         matcher.appendTail(builder);
-        return builder.toString();
+        return builder.toString().replace(";", "");
     }
 
 
@@ -244,7 +254,7 @@ public class RequestService {
             String expectedType = entry.getValue();
             Object paramValue = requestParams.get(paramName);
 
-            if (paramValue == null) throw new IllegalArgumentException("Parameter " + paramName + " is missing");
+            if (paramValue == null) throw new IllegalArgumentException("Parameter {{" + paramName + "}} is missing");
 
             boolean isValid = switch (expectedType) {
                 case "char", "function" -> paramValue instanceof String;
@@ -259,7 +269,7 @@ public class RequestService {
             };
 
             if (!isValid) {
-                throw new IllegalArgumentException("Parameter " + paramName + " is of type " + paramValue.getClass().getSimpleName() + " but expected " + expectedType);
+                throw new IllegalArgumentException("Parameter {{" + paramName + "}} is of type " + paramValue.getClass().getSimpleName() + " but expected " + expectedType);
             }
         }
     }

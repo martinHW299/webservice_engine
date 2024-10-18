@@ -3,22 +3,22 @@ package com.boctool.webservice_engine.controller;
 import com.boctool.webservice_engine.entity.Query;
 import com.boctool.webservice_engine.entity.QueryDTO;
 import com.boctool.webservice_engine.service.QueryService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import static com.boctool.webservice_engine.utils.Utilities.strToMap;
+
 
 @RestController
 @RequestMapping("api/query")
 public class QueryController {
 
-    final QueryService queryService;
+    private final QueryService queryService;
 
+    @Autowired
     public QueryController(QueryService queryService) {
         this.queryService = queryService;
     }
@@ -28,14 +28,26 @@ public class QueryController {
         return queryService.findAllQueries();
     }
 
+    @GetMapping("/id/{id}")
+    public Query findQueryById(@PathVariable String id){
+        return queryService.findQueryById(id);
+    }
+
+    @GetMapping("/md5/{md5}")
+    public ResponseEntity<QueryDTO> findQueryByMd5(@PathVariable String md5) {
+        Query query = queryService.findQueryByMd5(md5);
+        if (query == null) {
+            return ResponseEntity.notFound().build();
+        }
+        QueryDTO queryDTO = new QueryDTO();
+        queryDTO.setSql(query.getQueryText());
+        queryDTO.setParameters(strToMap(query.getQueryParams()));
+        return ResponseEntity.ok(queryDTO);
+    }
+
     @PostMapping
     public ResponseEntity<Object> saveQuery(@RequestBody List<QueryDTO> queryDTOS) {
         return queryService.saveQueries(queryDTOS);
-    }
-
-    @GetMapping("/{id}")
-    public Query findQueryById(@PathVariable String id){
-        return queryService.findQueryById(id);
     }
 
     @PostMapping("/deleteAll")

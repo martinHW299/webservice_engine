@@ -14,6 +14,7 @@ public class SourceController {
 
     private final SourceService sourceService;
 
+    @Autowired
     public SourceController(SourceService sourceService) {
         this.sourceService = sourceService;
     }
@@ -23,12 +24,12 @@ public class SourceController {
         return sourceService.findAllSources();
     }
 
-    @GetMapping("/id/{id}")
+    @GetMapping("/id")
     public Source findSourceById(@PathVariable String id) {
         return sourceService.findSourceById(id);
     }
 
-    @GetMapping("/status/{status}")
+    @GetMapping("/status")
     public List<Source> findSourcesByStatus(@PathVariable String status) {
         return sourceService.findSourcesByStatus(status);
     }

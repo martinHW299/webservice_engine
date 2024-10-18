@@ -10,6 +10,7 @@ public class Utilities {
 
     public static final String REGEX_BRACE_PATTER = "\\{\\{(.*?)\\}\\}";
 
+
     public static String determineQueryType(String query) {
         String trimmedQuery = query.trim().toUpperCase();
         if (trimmedQuery.startsWith("SELECT")) {
@@ -24,6 +25,7 @@ public class Utilities {
             return "UNKNOWN";
         }
     }
+
 
     public static String convertTextToMd5(String query) {
         try {
@@ -40,6 +42,7 @@ public class Utilities {
         }
     }
 
+
     public static List<Map<String, Object>> lowerCaseJsonKey(List<Map<String, Object>> json) {
         List<Map<String, Object>> lowerCasedJsonKey = new ArrayList<>();
         for (Map<String, Object> row : json) {
@@ -51,4 +54,18 @@ public class Utilities {
         }
         return lowerCasedJsonKey;
     }
+
+
+    public static Map<String, String> strToMap(String str) {
+        Map<String, String> map = new HashMap<>();
+        String[] pairs = str.split(",");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=");
+            if (keyValue.length == 2) {
+                map.put(keyValue[0].trim(), keyValue[1].trim());
+            }
+        }
+        return map;
+    }
+
 }

@@ -6,6 +6,7 @@ public class RequestDTO {
     String sqlId;
     String sourceId;
     Map<String, Object> parameters;
+    Integer maxRows;
 
     public String getSqlId() {
         return sqlId;
@@ -29,5 +30,13 @@ public class RequestDTO {
 
     public void setParameters(Map<String, Object> parameters) {
         this.parameters = parameters;
+    }
+
+    public Integer getMaxRows() {
+        return maxRows;
+    }
+
+    public void setMaxRows(Integer maxRows) {
+        this.maxRows = maxRows;
     }
 }
