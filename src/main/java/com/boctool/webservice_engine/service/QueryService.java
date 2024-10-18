@@ -42,7 +42,6 @@ public class QueryService {
             Map<String, String> parameters = queryDTO.getParameters();
             String normalizedQueryText = normalizeSql(sql);
             String queryMd5 = convertTextToMd5(normalizedQueryText);
-            logger.info(queryMd5);
 
             try {
                 if (existsByQueryMd5(queryMd5)) {
