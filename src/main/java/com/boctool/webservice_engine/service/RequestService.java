@@ -199,7 +199,7 @@ public class RequestService {
                 } else if (isFunction(paramValue.toString())) {
                     paramValueStr = paramValue.toString();
                 } else {
-                    paramValueStr = "'" + paramValue.toString() + "'";
+                    paramValueStr = "'" + paramValue + "'";
                 }
 
                 matcher.appendReplacement(builder, paramValueStr);

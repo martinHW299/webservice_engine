@@ -98,7 +98,7 @@ public class QueryService {
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String paramType = entry.getValue().toLowerCase();
             if (!ALLOWED_TYPES.contains(paramType)) {
-                throw new IllegalArgumentException("Invalid parameter type " + paramType + " for key " + entry.getKey());
+                throw new IllegalArgumentException("Invalid parameter type " + paramType + " for key {{" + entry.getKey()+ "}}");
             }
         }
     }
@@ -113,12 +113,12 @@ public class QueryService {
         }
         for (String param : sqlParams) {
             if (!parameters.containsKey(param)) {
-                throw new IllegalArgumentException("Parameter '" + param + "' in the SQL is not defined in the parameters key");
+                throw new IllegalArgumentException("Parameter {{" + param + "}} in the SQL is not defined in the parameters key");
             }
         }
         for (String paramKey : parameters.keySet()) {
             if (!sqlParams.contains(paramKey)) {
-                throw new IllegalArgumentException("Parameter '" + paramKey + "' is not defined in the SQL statement");
+                throw new IllegalArgumentException("Parameter {{" + paramKey + "}} is not defined in the SQL statement");
             }
         }
 

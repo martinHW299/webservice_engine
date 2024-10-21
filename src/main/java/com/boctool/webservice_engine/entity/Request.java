@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
-@Table(name = "TST_API_REQUEST")
+@Table(name = "TST_WSE_REQUEST")
 public class Request {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "uuid2")

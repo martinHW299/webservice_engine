@@ -7,7 +7,7 @@ import org.hibernate.annotations.GenericGenerator;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "TST_API_SOURCE")
+@Table(name = "TST_WSE_SOURCE")
 public class Source {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "uuid2")
