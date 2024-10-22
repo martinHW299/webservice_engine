@@ -1,78 +1,42 @@
 package com.boctool.webservice_engine.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.UUID;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "TST_API_REQUEST")
+@Table(name = "TST_WSE_REQUEST")
 public class Request {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "REQUEST_ID", updatable = false, nullable = false)
-    private String requestId;
-    @Column(name = "REQUEST_QUERY_ID")
-    private String requestQueryId;
-    @Column(name = "REQUEST_QUERY_VALUES", length = 2000)
-    private String requestQueryValues;
+    private String requestId = UUID.randomUUID().toString();
+    @Column(name = "REQUEST_WEBSERVICE_ID")
+    private String requestWebserviceId;
+    @Column(name = "REQUEST_WEBSERVICE_VALUES")
+    private String requestWebserviceValues;
     @Column(name = "REQUEST_SOURCE_ID")
     private String requestSourceId;
-    @Column(name = "REQUEST_STATUS", nullable = false)
+    @Column(name = "REQUEST_STATUS")
     private String requestStatus = "PE";//AC,HI,EL,AN
-    @CreationTimestamp
-    @Temporal(TemporalType.DATE)
-    @Column(name = "REQUEST_REGDATE", updatable = false)
-    private Date requestRegdate;
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public String getRequestQueryId() {
-        return requestQueryId;
-    }
-
-    public void setRequestQueryId(String requestQueryId) {
-        this.requestQueryId = requestQueryId;
-    }
-
-    public String getRequestQueryValues() {
-        return requestQueryValues;
-    }
-
-    public void setRequestQueryValues(String requestQueryValues) {
-        this.requestQueryValues = requestQueryValues;
-    }
-
-    public String getRequestSourceId() {
-        return requestSourceId;
-    }
-
-    public void setRequestSourceId(String requestSourceId) {
-        this.requestSourceId = requestSourceId;
-    }
-
-    public String getRequestStatus() {
-        return requestStatus;
-    }
-
-    public void setRequestStatus(String requestStatus) {
-        this.requestStatus = requestStatus;
-    }
-
-    public Date getRequestRegdate() {
-        return requestRegdate;
-    }
-
-    public void setRequestRegdate(Date requestRegdate) {
-        this.requestRegdate = requestRegdate;
-    }
+    @Column(name = "REQUEST_CREATION_DATE")
+    private LocalDate requestCreationDate = LocalDate.now();
+    @Column(name = "REQUEST_UID")
+    private Integer requestUid;
+    @Column(name = "REQUEST_SID")
+    private Integer requestSid;
+    @Column(name = "REQUEST_TOKEN")
+    private String requestToken;
 }

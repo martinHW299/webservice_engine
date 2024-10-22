@@ -1,5 +1,8 @@
 package com.boctool.webservice_engine.utils;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -7,13 +10,30 @@ import javax.crypto.spec.PBEParameterSpec;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-public class EncryptionUtils {
-    // PBE parameters
-    private static final String ENCRYPTION_ALGORITHM = "PBEWithMD5AndDES"; // PBE Algorithm
-    private static final int ITERATION_COUNT = 10000; // Iteration count for key derivation
-    private static final int SALT_LENGTH = 8; // Salt length in bytes
 
-    public static String encrypt(String password, String passphrase) throws Exception {
+@Component
+public class EncryptionUtils {
+
+/*
+    private final static String ENCRYPTION_ALGORITHM = "PBEWithMD5AndDES";
+    private final static int ITERATION_COUNT = 10000;// Iteration count for key derivation
+    private final static int SALT_LENGTH = 8;// Salt length in bytes
+
+    encryption.algorithm=PBEWithMD5AndDES
+encryption.iteration-count=10000
+encryption.salt-length=8
+*/
+
+    @Value("${encryption.algorithm}")
+    private String ENCRYPTION_ALGORITHM;
+
+    @Value("${encryption.iteration-count}")
+    private int ITERATION_COUNT;
+
+    @Value("${encryption.salt-length}")
+    private int SALT_LENGTH;
+
+    public String encrypt(String password, String passphrase) throws Exception {
         // Generate a random salt
         byte[] salt = new byte[SALT_LENGTH];
         SecureRandom secureRandom = new SecureRandom();
@@ -40,7 +60,7 @@ public class EncryptionUtils {
     }
 
     // Decrypt the sourcePassword using Password-Based Encryption (PBE)
-    public static String decrypt(String encryptedPassword, String passphrase) throws Exception {
+    public String decrypt(String encryptedPassword, String passphrase) throws Exception {
         byte[] encryptedDataWithSalt = Base64.getDecoder().decode(encryptedPassword);
 
         // Extract the salt from the encrypted data

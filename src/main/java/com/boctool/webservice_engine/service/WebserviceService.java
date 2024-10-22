@@ -1,9 +1,9 @@
 package com.boctool.webservice_engine.service;
 
 import com.boctool.webservice_engine.controller.RequestController;
-import com.boctool.webservice_engine.entity.Query;
-import com.boctool.webservice_engine.entity.QueryDTO;
-import com.boctool.webservice_engine.repository.QueryRepository;
+import com.boctool.webservice_engine.entity.Webservice;
+import com.boctool.webservice_engine.entity.WebserviceDTO;
+import com.boctool.webservice_engine.repository.WebserviceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -21,31 +21,31 @@ import static com.boctool.webservice_engine.utils.Utilities.*;
 
 
 @Service
-public class QueryService {
+public class WebserviceService {
 
-    private final QueryRepository queryRepository;
+    private final WebserviceRepository webserviceRepository;
 
     @Autowired
-    public QueryService(QueryRepository queryRepository) {
-        this.queryRepository = queryRepository;
+    public WebserviceService(WebserviceRepository webserviceRepository) {
+        this.webserviceRepository = webserviceRepository;
     }
 
     private static final Set<String> ALLOWED_TYPES = Set.of("char", "integer", "date", "datetime", "array_char", "array_integer", "function");
     private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
 
-    public ResponseEntity<Object> saveQueries(List<QueryDTO> queryDTOS) {
+    public ResponseEntity<Object> saveWebservice(List<WebserviceDTO> webserviceDTOS) {
         Map<String, Object> log = new HashMap<>();
         int i = 1;
 
-        for (QueryDTO queryDTO : queryDTOS) {
-            String sql = queryDTO.getSql();
-            Map<String, String> parameters = queryDTO.getParameters();
+        for (WebserviceDTO webserviceDTO : webserviceDTOS) {
+            String sql = webserviceDTO.getWebservice();
+            Map<String, String> parameters = webserviceDTO.getParameters();
             String normalizedQueryText = normalizeSql(sql);
-            String queryMd5 = convertTextToMd5(normalizedQueryText);
+            String webserviceMd5 = convertTextToMd5(normalizedQueryText);
 
             try {
-                if (existsByQueryMd5(queryMd5)) {
-                    log.put("" + i++, "Error sql statement already exists " + queryMd5);
+                if (existsByWebserviceMd5(webserviceMd5)) {
+                    log.put("" + i++, "Error sql statement already exists " + webserviceMd5);
                     continue;
                 }
 
@@ -53,19 +53,18 @@ public class QueryService {
 
                 validateInputTypeParameters(parameters);
 
-                Query query = new Query();
-                query.setQueryMd5(queryMd5);
-                query.setQueryText(sql);
-                query.setQueryParams(new ObjectMapper().writeValueAsString(parameters));
-                query.setQueryRegdate(new Date());
-                queryRepository.save(query);
+                Webservice webservice = new Webservice();
+                webservice.setWebserviceMd5(webserviceMd5);
+                webservice.setWebserviceText(sql);
+                webservice.setWebserviceParams(new ObjectMapper().writeValueAsString(parameters));
+                webserviceRepository.save(webservice);
 
-                log.put("" + i++, query);
+                log.put("" + i++, webservice);
 
             } catch (JsonProcessingException e) {
-                log.put("" + i++, "Error processing parameters for query " + queryMd5 + ": " + e.getMessage());
+                log.put("" + i++, "Error processing parameters for query " + webserviceMd5 + ": " + e.getMessage());
             } catch (Exception e) {
-                log.put("" + i++, "Error saving query " + queryMd5 + ": " + e.getMessage());
+                log.put("" + i++, "Error saving query " + webserviceMd5 + ": " + e.getMessage());
             }
         }
 
@@ -128,16 +127,16 @@ public class QueryService {
         logger.info("Parameters validated successfully");
     }
 
-    public boolean existsByQueryMd5(String queryMd5) {
-        return queryRepository.findQueryByQueryMd5(queryMd5) != null;
+    public boolean existsByWebserviceMd5(String queryMd5) {
+        return webserviceRepository.findByWebserviceMd5(queryMd5) != null;
     }
 
-    public List<Query> findAllQueries() {
-        return queryRepository.findAll();
+    public List<Webservice> findAllWebservices() {
+        return webserviceRepository.findAll();
     }
 
-    public void deleteAllQueries() {
-        queryRepository.deleteAll();
+    public void deleteAllWebservices() {
+        webserviceRepository.deleteAll();
     }
 
 }
