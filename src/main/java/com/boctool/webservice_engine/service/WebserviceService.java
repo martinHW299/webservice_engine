@@ -44,48 +44,26 @@ public class WebserviceService {
             String webserviceMd5 = convertTextToMd5(normalizedQueryText);
 
             try {
-<<<<<<< HEAD:src/main/java/com/boctool/webservice_engine/service/QueryService.java
-                if (existsByQueryMd5(queryMd5)) {
-                    Query query = findQueryByMd5(queryMd5);
-                    log.put("Warning Obj " + i++ + " already exists", query);
-=======
                 if (existsByWebserviceMd5(webserviceMd5)) {
-                    log.put("" + i++, "Error sql statement already exists " + webserviceMd5);
->>>>>>> wse2:src/main/java/com/boctool/webservice_engine/service/WebserviceService.java
-                    continue;
+                    Webservice webservice = webserviceRepository.findByWebserviceMd5(webserviceMd5);
+                    log.put("Warning Obj " + i++ + " already exists", webservice);
                 }
 
                 validateQuery(sql, parameters);
                 validateInputTypeParameters(parameters);
 
-<<<<<<< HEAD:src/main/java/com/boctool/webservice_engine/service/QueryService.java
-                Query query = new Query();
-                query.setQueryMd5(queryMd5);
-                query.setQueryText(sql.replace(";", ""));
-                query.setQueryParams(new ObjectMapper().writeValueAsString(parameters));
-                query.setQueryRegdate(new Date());
-                queryRepository.save(query);
-
-                log.put("Obj " + i++, query);
-
-            } catch (JsonProcessingException e) {
-                log.put("Error Obj " + i++, "Processing parameters for query {} " + e.getMessage());
-            } catch (Exception e) {
-                log.put("Error Obj " + i++, "Saving query {} " + e.getMessage());
-=======
                 Webservice webservice = new Webservice();
                 webservice.setWebserviceMd5(webserviceMd5);
                 webservice.setWebserviceText(sql);
                 webservice.setWebserviceParams(new ObjectMapper().writeValueAsString(parameters));
                 webserviceRepository.save(webservice);
 
-                log.put("" + i++, webservice);
+                log.put("Obj " + i++, webservice);
 
             } catch (JsonProcessingException e) {
-                log.put("" + i++, "Error processing parameters for query " + webserviceMd5 + ": " + e.getMessage());
+                log.put("Error Obj " + i++, "Processing parameters for query {} " + e.getMessage());
             } catch (Exception e) {
-                log.put("" + i++, "Error saving query " + webserviceMd5 + ": " + e.getMessage());
->>>>>>> wse2:src/main/java/com/boctool/webservice_engine/service/WebserviceService.java
+                log.put("Error Obj " + i++, "Saving query {} " + e.getMessage());
             }
         }
 
@@ -157,11 +135,11 @@ public class WebserviceService {
         webserviceRepository.deleteAll();
     }
 
-    public Query findQueryById(String id) {
-        return queryRepository.findQueryByQueryId(id);
+    public Webservice findByWebserviceId(String id) {
+        return webserviceRepository.findByWebserviceId(id);
     }
 
-    public Query findQueryByMd5(String md5) {
-        return queryRepository.findQueryByQueryMd5(md5);
+    public Webservice findByWebserviceMd5(String md5) {
+        return webserviceRepository.findByWebserviceMd5(md5);
     }
 }

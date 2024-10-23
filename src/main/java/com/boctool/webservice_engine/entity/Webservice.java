@@ -21,7 +21,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "TST_WSE_WEBSERVICE")
 public class Webservice {
-
     @Id
     @Column(name = "WEBSERVICE_ID", updatable = false, nullable = false, length = 64)
     private String webserviceId = UUID.randomUUID().toString();

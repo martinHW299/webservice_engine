@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -84,7 +83,7 @@ public class RequestService {
         try {
             validateElementsForExecution(queryId, sourceId, requestParams);
 
-            Webservice webservice = webserviceRepository.findQueryByWebserviceId(queryId);
+            Webservice webservice = webserviceRepository.findByWebserviceId(queryId);
             logger.info("Executing query: {}", webservice);
 
             boolean isSelect = determineQueryType(webservice.getWebserviceText()).equals("SELECT");
@@ -102,7 +101,6 @@ public class RequestService {
             });
             validateParameters(queryParams, requestParams);
 
-<<<<<<< HEAD
             maxRows = requestDTO.getMaxRows();
             if (maxRows != 0) {
                 jdbcTemplate.setMaxRows(maxRows);
@@ -110,10 +108,8 @@ public class RequestService {
                 jdbcTemplate.setMaxRows(100);
             }
 
-            finalQuery = replaceParameters(query.getQueryText(), requestParams);
-=======
             finalQuery = replaceParameters(webservice.getWebserviceText(), requestParams).replace(";", "");
->>>>>>> wse2
+
             logger.info("Final Query: {}", finalQuery);
             logger.info("Parameters: {}", requestParams);
 

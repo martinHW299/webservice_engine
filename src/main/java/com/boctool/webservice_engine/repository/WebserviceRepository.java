@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface WebserviceRepository extends JpaRepository<Webservice, String> {
     Webservice findByWebserviceMd5(String md5);
     boolean existsByWebserviceId(String id);
-    Webservice findQueryByWebserviceId(String id);
+    Webservice findByWebserviceId(String id);
 }
