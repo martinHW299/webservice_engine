@@ -2,124 +2,48 @@ package com.boctool.webservice_engine.entity;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
+import java.util.Date;
+import java.util.UUID;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "TST_WSE_SOURCE")
 public class Source {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "SOURCE_ID", updatable = false, nullable = false, length = 64)
-    private String sourceId;
-    @Column(name = "SOURCE_NAME", length = 64)
+    private String sourceId = UUID.randomUUID().toString();
+    @Column(name = "SOURCE_NAME")
     private String sourceName;
-    @Column(name = "SOURCE_URL", length = 256)
+    @Column(name = "SOURCE_URL")
     private String sourceUrl;
-    @Column(name = "SOURCE_USR", length = 64)
+    @Column(name = "SOURCE_USR")
     private String sourceUsr;
-    @Column(name = "SOURCE_PWD", length = 64)
+    @Column(name = "SOURCE_PWD")
     private String sourcePwd;
     @Column(name = "SOURCE_POOL")
-    private Integer sourcePool = 2;
-    @Column(name = "SOURCE_REGDATE", updatable = false)
-    private LocalDate sourceRegdate = LocalDate.now();
+    private Integer sourcePool;
+    @Column(name = "SOURCE_CREATION_DATE", updatable = false)
+    private LocalDate sourceCreationDate = LocalDate.now();
     @Column(name = "SOURCE_STATUS", length = 2)
     private String sourceStatus = "PE";//AC,HI,EL,AN
     @Column(name = "SOURCE_TIMEOUT")
     private long sourceTimeout = 20000;
     @Column(name = "SOURCE_IDLETIMEOUT")
-    private long sourceIdletimeout = 300000;
+    private long sourceIdleTimeout = 300000;
     @Column(name = "SOURCE_MAXLIFETIME")
-    private long sourceMaxlifetime = 900000;
-
-    public String getSourceId() {
-        return sourceId;
-    }
-
-    public void setSourceId(String sourceId) {
-        this.sourceId = sourceId;
-    }
-
-    public String getSourceName() {
-        return sourceName;
-    }
-
-    public void setSourceName(String sourceName) {
-        this.sourceName = sourceName;
-    }
-
-    public String getSourceUrl() {
-        return sourceUrl;
-    }
-
-    public void setSourceUrl(String sourceUrl) {
-        this.sourceUrl = sourceUrl;
-    }
-
-    public String getSourceUsr() {
-        return sourceUsr;
-    }
-
-    public void setSourceUsr(String sourceUsr) {
-        this.sourceUsr = sourceUsr;
-    }
-
-    public String getSourcePwd() {
-        return sourcePwd;
-    }
-
-    public void setSourcePwd(String sourcePwd) {
-        this.sourcePwd = sourcePwd;
-    }
-
-    public Integer getSourcePool() {
-        return sourcePool;
-    }
-
-    public void setSourcePool(Integer sourcePool) {
-        this.sourcePool = sourcePool;
-    }
-
-    public LocalDate getSourceRegdate() {
-        return sourceRegdate;
-    }
-
-    public void setSourceRegdate(LocalDate sourceRegdate) {
-        this.sourceRegdate = sourceRegdate;
-    }
-
-    public String getSourceStatus() {
-        return sourceStatus;
-    }
-
-    public void setSourceStatus(String sourceStatus) {
-        this.sourceStatus = sourceStatus;
-    }
-
-    public long getSourceTimeout() {
-        return sourceTimeout;
-    }
-
-    public void setSourceTimeout(long sourceTimeout) {
-        this.sourceTimeout = sourceTimeout;
-    }
-
-    public long getSourceIdletimeout() {
-        return sourceIdletimeout;
-    }
-
-    public void setSourceIdletimeout(long sourceIdletimeout) {
-        this.sourceIdletimeout = sourceIdletimeout;
-    }
-
-    public long getSourceMaxlifetime() {
-        return sourceMaxlifetime;
-    }
-
-    public void setSourceMaxlifetime(long sourceMaxlifetime) {
-        this.sourceMaxlifetime = sourceMaxlifetime;
-    }
+    private long sourceMaxLifetime = 900000;
+    @Column(name = "SOURCE_MINIDLE")
+    private int sourceMinIdle = 1;
 }

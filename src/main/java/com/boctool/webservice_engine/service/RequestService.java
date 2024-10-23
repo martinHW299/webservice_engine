@@ -2,7 +2,7 @@ package com.boctool.webservice_engine.service;
 
 import com.boctool.webservice_engine.controller.RequestController;
 import com.boctool.webservice_engine.entity.*;
-import com.boctool.webservice_engine.repository.QueryRepository;
+import com.boctool.webservice_engine.repository.WebserviceRepository;
 import com.boctool.webservice_engine.repository.RequestRepository;
 import com.boctool.webservice_engine.repository.ResponseRepository;
 import com.boctool.webservice_engine.repository.SourceRepository;
@@ -31,15 +31,15 @@ import static com.boctool.webservice_engine.utils.Utilities.*;
 public class RequestService {
 
     private final RequestRepository requestRepository;
-    private final QueryRepository queryRepository;
+    private final WebserviceRepository webserviceRepository;
     private final SourceService sourceService;
     private final ResponseRepository responseRepository;
     private final SourceRepository sourceRepository;
 
     @Autowired
-    public RequestService(RequestRepository requestRepository, QueryRepository queryRepository, SourceService sourceService, ResponseRepository responseRepository, SourceRepository sourceRepository) {
+    public RequestService(RequestRepository requestRepository, WebserviceRepository webserviceRepository, SourceService sourceService, ResponseRepository responseRepository, SourceRepository sourceRepository) {
         this.requestRepository = requestRepository;
-        this.queryRepository = queryRepository;
+        this.webserviceRepository = webserviceRepository;
         this.sourceService = sourceService;
         this.responseRepository = responseRepository;
         this.sourceRepository = sourceRepository;
@@ -68,7 +68,7 @@ public class RequestService {
 
     public ResponseDTO executeQuery(RequestDTO requestDTO) {
         ResponseDTO responseDTO = new ResponseDTO();
-        String queryId = requestDTO.getSqlId();
+        String queryId = requestDTO.getWebserviceId();
         String sourceId = requestDTO.getSourceId();
         Map<String, Object> requestParams = requestDTO.getParameters();
 
@@ -84,18 +84,25 @@ public class RequestService {
         try {
             validateElementsForExecution(queryId, sourceId, requestParams);
 
-            Query query = queryRepository.findQueryByQueryId(queryId);
-            logger.info("Executing query: {}", query);
+            Webservice webservice = webserviceRepository.findQueryByWebserviceId(queryId);
+            logger.info("Executing query: {}", webservice);
 
-            boolean isSelect = determineQueryType(query.getQueryText()).equals("SELECT");
+            boolean isSelect = determineQueryType(webservice.getWebserviceText()).equals("SELECT");
 
             DataSource dataSource = sourceService.getDataSourceById(sourceId);
             JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
-            queryParams = objectMapper.readValue(query.getQueryParams(), new TypeReference<HashMap<String, String>>() {
+            if (requestDTO.getMaxRows() != 0) {
+                jdbcTemplate.setMaxRows(requestDTO.getMaxRows());
+            } else {
+                jdbcTemplate.setMaxRows(100);
+            }
+
+            queryParams = objectMapper.readValue(webservice.getWebserviceParams(), new TypeReference<HashMap<String, String>>() {
             });
             validateParameters(queryParams, requestParams);
 
+<<<<<<< HEAD
             maxRows = requestDTO.getMaxRows();
             if (maxRows != 0) {
                 jdbcTemplate.setMaxRows(maxRows);
@@ -104,6 +111,9 @@ public class RequestService {
             }
 
             finalQuery = replaceParameters(query.getQueryText(), requestParams);
+=======
+            finalQuery = replaceParameters(webservice.getWebserviceText(), requestParams).replace(";", "");
+>>>>>>> wse2
             logger.info("Final Query: {}", finalQuery);
             logger.info("Parameters: {}", requestParams);
 
@@ -130,7 +140,7 @@ public class RequestService {
             responseDTO.setMessage("Query executed successfully");
 
             saveRequest(queryId, sourceId, requestParams, finalQuery);
-            saveResponse(runtime, queryId, sourceId, query.getQueryMd5(), finalQuery, queryParams, requestParams);
+            saveResponse(runtime, queryId, sourceId, webservice.getWebserviceMd5(), finalQuery, queryParams, requestParams);
 
         } catch (IllegalArgumentException e) {
             responseDTO.setCode(400);
@@ -158,7 +168,7 @@ public class RequestService {
     private void validateElementsForExecution(String sqlId, String sourceId, Map<String, Object> requestParams) {
         if (sqlId != null && sourceId != null && requestParams != null) {
             // Check if query exists in the database
-            boolean queryExists = queryRepository.existsByQueryId(sqlId);
+            boolean queryExists = webserviceRepository.existsByWebserviceId(sqlId);
             logger.info("Query exists: {}", queryExists);
             if (!queryExists) {
                 throw new IllegalArgumentException(sqlId + "does not exist in the database");
@@ -219,11 +229,11 @@ public class RequestService {
         response.setResponseCode(200);
         response.setResponseMessage("Query executed successfully");
         response.setResponseSourceId(sourceId);
-        response.setResponseQueryId(queryId);
-        response.setResponseQueryMd5(queryMd5);
-        response.setResponseQueryText(finalQuery);
-        response.setResponseQueryParams(queryParams.toString());
-        response.setResponseQueryValues(requestParams.toString());
+        response.setResponseWebserviceId(queryId);
+        response.setResponseWebserviceMd5(queryMd5);
+        response.setResponseWebserviceText(finalQuery);
+        response.setResponseWebserviceParams(queryParams.toString());
+        response.setResponseWebserviceValues(requestParams.toString());
         responseRepository.save(response); // Save response in the request
     }
 
@@ -232,18 +242,17 @@ public class RequestService {
         response.setResponseCode(code);
         response.setResponseMessage(null);
         response.setResponseSourceId(sourceId);
-        response.setResponseQueryId(sqlId);
-        response.setResponseQueryText(finalQuery);
-        response.setResponseQueryValues(requestParams.toString());
+        response.setResponseWebserviceId(sqlId);
+        response.setResponseWebserviceText(finalQuery);
+        response.setResponseWebserviceValues(requestParams.toString());
         responseRepository.save(response); // Save response in the request
     }
 
     private void saveRequest(String sqlId, String sourceId, Map<String, Object> requestParams, String finalQuery) {
         Request request = new Request();
-        request.setRequestQueryId(sqlId);
-        request.setRequestRegdate(new Date());
+        request.setRequestWebserviceId(sqlId);
         request.setRequestSourceId(sourceId);
-        request.setRequestQueryValues(requestParams.toString());
+        request.setRequestWebserviceValues(requestParams.toString());
         requestRepository.save(request);
     }
 

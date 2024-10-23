@@ -10,31 +10,34 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class SourceService {
 
     private final SourceRepository sourceRepository;
+    private final EncryptionUtils encryptionUtils;
 
     @Autowired
-    public SourceService(SourceRepository sourceRepository) {
+    public SourceService(SourceRepository sourceRepository, EncryptionUtils encryptionUtils) {
         this.sourceRepository = sourceRepository;
+        this.encryptionUtils = encryptionUtils;
     }
+
+    Map<String, DataSource> dataSourceMap = new HashMap<>();
+
+    @Value("${decryption.passphrase}")
+    private String PASSPHRASE;
 
     private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
     @PostConstruct
     public void init() {
         loadAllSources();  // Load connections
     }
-
-    Map<String, DataSource> dataSourceMap = new HashMap<>();
-    private static final String PASSPHRASE = "nothingIsFullySecured";
 
     public void loadAllSources() {
         List<Source> sources = sourceRepository.findAll();
@@ -44,20 +47,18 @@ public class SourceService {
             hikariConfig.setDriverClassName("oracle.jdbc.OracleDriver");
             hikariConfig.setJdbcUrl(source.getSourceUrl());
             String decryptedPassword;
-            String decryptedUsr;
             try {
-                decryptedPassword = EncryptionUtils.decrypt(source.getSourcePwd(), PASSPHRASE);
-                decryptedUsr = EncryptionUtils.decrypt(source.getSourceUsr(), PASSPHRASE);
+                decryptedPassword = encryptionUtils.decrypt(source.getSourcePwd(), PASSPHRASE);
             } catch (Exception e) {
                 throw new RuntimeException("Error decrypting connection information", e);
             }
             hikariConfig.setPassword(decryptedPassword);
-            hikariConfig.setUsername(decryptedUsr);
+            hikariConfig.setUsername(source.getSourceUsr());
             hikariConfig.setMaximumPoolSize(source.getSourcePool());
-            hikariConfig.setMinimumIdle(source.getSourcePool() / 2); //columna
+            hikariConfig.setMinimumIdle(source.getSourceMinIdle());
             hikariConfig.setConnectionTimeout(source.getSourceTimeout());
-            hikariConfig.setIdleTimeout(source.getSourceIdletimeout());
-            hikariConfig.setMaxLifetime(source.getSourceMaxlifetime());
+            hikariConfig.setIdleTimeout(source.getSourceIdleTimeout());
+            hikariConfig.setMaxLifetime(source.getSourceMaxLifetime());
             hikariConfig.setAutoCommit(false);
 
             HikariDataSource dataSource = new HikariDataSource(hikariConfig);
@@ -71,9 +72,9 @@ public class SourceService {
     }
 
     public void saveSource(Source source) throws Exception {
-        String encryptedPassword = EncryptionUtils.encrypt(source.getSourcePwd(), PASSPHRASE);
-        String encryptedSourceUsr = EncryptionUtils.encrypt(source.getSourceUsr(), PASSPHRASE);
-        source.setSourceUsr(encryptedSourceUsr);
+        String encryptedPassword = encryptionUtils.encrypt(source.getSourcePwd(), PASSPHRASE);
+        source.setSourceId(UUID.randomUUID().toString());
+        source.setSourceUsr(source.getSourceUsr());
         source.setSourcePwd(encryptedPassword);
         sourceRepository.save(source); // Save the source with encrypted password
     }
