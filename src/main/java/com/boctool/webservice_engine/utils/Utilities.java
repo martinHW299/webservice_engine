@@ -68,4 +68,26 @@ public class Utilities {
         return map;
     }
 
+    public static Map<String, String> convertStringToMap(String input) {
+        Map<String, String> map = new HashMap<>();
+
+        if (input == null || input.isEmpty()) {
+            return map;
+        }
+
+        // Split by commas to separate each key-value pair
+        String[] pairs = input.split(",");
+
+        for (String pair : pairs) {
+            // Split by the first "=" to get key and value
+            String[] keyValue = pair.split("=", 2);
+            if (keyValue.length == 2) {
+                map.put(keyValue[0].trim(), keyValue[1].trim());
+            } else if (keyValue.length == 1) {
+                map.put(keyValue[0].trim(), ""); // If there's a key without a value
+            }
+        }
+
+        return map;
+    }
 }

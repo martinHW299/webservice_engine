@@ -93,7 +93,7 @@ public class SourceService {
         return sourceRepository.findAll();
     }
 
-    public Source findSourceById(String sourceId) {
+    public Optional<Source> findSourceById(String sourceId) {
         return sourceRepository.findSourceBySourceId(sourceId);
     }
 

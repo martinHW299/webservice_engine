@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -20,9 +22,9 @@ public class Response {
     @Column(name = "RESPONSE_ID", updatable = false, nullable = false)
     private String responseId = UUID.randomUUID().toString();
     @Column(name = "RESPONSE_INIT_DATE")
-    private Date responseInitDate;
+    private LocalDateTime responseInitDate;
     @Column(name = "RESPONSE_END_DATE")
-    private Date responseEndDate;
+    private LocalDateTime responseEndDate;
     @Column(name = "RESPONSE_RUNTIME")
     private Double responseRuntime;
     @Column(name = "RESPONSE_STATUS", length = 2)

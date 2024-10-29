@@ -5,10 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SourceRepository extends JpaRepository<Source, String> {
-    Source findSourceBySourceId(String sourceId);
+    Optional<Source> findSourceBySourceId(String sourceId);
     List<Source> findSourceBySourceStatus(String status);
     boolean existsBySourceId(String sourceId);
 }

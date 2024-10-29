@@ -28,7 +28,6 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
+.idea/src/main/resources
 ### VS Code ###
 .vscode/
->>>>>>> webservice_v1

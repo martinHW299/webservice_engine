@@ -25,7 +25,7 @@ public class Request {
     private String requestId = UUID.randomUUID().toString();
     @Column(name = "REQUEST_WEBSERVICE_ID")
     private String requestWebserviceId;
-    @Column(name = "REQUEST_WEBSERVICE_VALUES")
+    @Column(name = "REQUEST_WEBSERVICE_VALUES", length = 4000)
     private String requestWebserviceValues;
     @Column(name = "REQUEST_SOURCE_ID")
     private String requestSourceId;

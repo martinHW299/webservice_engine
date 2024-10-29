@@ -1,8 +1,7 @@
 package com.boctool.webservice_engine.service;
 
 import com.boctool.webservice_engine.controller.RequestController;
-import com.boctool.webservice_engine.entity.Webservice;
-import com.boctool.webservice_engine.entity.WebserviceDTO;
+import com.boctool.webservice_engine.entity.*;
 import com.boctool.webservice_engine.repository.WebserviceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.boctool.webservice_engine.utils.Utilities.*;
 
@@ -30,10 +30,11 @@ public class WebserviceService {
         this.webserviceRepository = webserviceRepository;
     }
 
-    private static final Set<String> ALLOWED_TYPES = Set.of("char", "integer", "date", "datetime", "array_char", "array_integer", "function");
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
 
-    public ResponseEntity<Object> saveWebservice(List<WebserviceDTO> webserviceDTOS) {
+    public ResponseEntity<Object> saveWebservices(List<WebserviceDTO> webserviceDTOS) {
         Map<String, Object> log = new HashMap<>();
         int i = 1;
 
@@ -41,14 +42,15 @@ public class WebserviceService {
             String sql = webserviceDTO.getWebservice();
             Map<String, String> parameters = webserviceDTO.getParameters();
             String normalizedQueryText = normalizeSql(sql);
-            String webserviceMd5 = convertTextToMd5(normalizedQueryText);
+            String webserviceMd5 = convertTextToMd5(normalizedQueryText
+                    .concat(parameters.toString())
+//                    .concat(webserviceDTO.getCode())
+//                    .concat(webserviceDTO.getName())
+//                    .concat(webserviceDTO.getDescription())
+            );
 
             try {
-                if (existsByWebserviceMd5(webserviceMd5)) {
-                    Webservice webservice = webserviceRepository.findByWebserviceMd5(webserviceMd5);
-                    log.put("Warning Obj " + i++ + " already exists", webservice);
-                }
-
+                existsByWebserviceMd5(webserviceMd5);
                 validateQuery(sql, parameters);
                 validateInputTypeParameters(parameters);
 
@@ -56,6 +58,10 @@ public class WebserviceService {
                 webservice.setWebserviceMd5(webserviceMd5);
                 webservice.setWebserviceText(sql);
                 webservice.setWebserviceParams(new ObjectMapper().writeValueAsString(parameters));
+                webservice.setWebserviceCode(webserviceDTO.getCode());
+                webservice.setWebserviceName(webserviceDTO.getName());
+                webservice.setWebserviceDescription(webserviceDTO.getDescription());
+                webservice.setWebserviceCreationUid(webserviceDTO.getUserCode());
                 webserviceRepository.save(webservice);
 
                 log.put("Obj " + i++, webservice);
@@ -69,6 +75,56 @@ public class WebserviceService {
 
         return new ResponseEntity<>(log, HttpStatus.OK);
     }
+
+
+    public ResponseEntity<Object> updateWebservice(String id, WebserviceDTO updatedWebservice) {
+        Map<String, Object> log = new HashMap<>();
+
+        String sql = updatedWebservice.getWebservice();
+        Map<String, String> parameters = updatedWebservice.getParameters();
+        String normalizedQueryText = normalizeSql(sql);
+        String webserviceMd5 = convertTextToMd5(normalizedQueryText
+                .concat(parameters.toString())
+//                .concat(updatedWebservice.getCode())
+//                .concat(updatedWebservice.getName())
+//                .concat(updatedWebservice.getDescription())
+        );
+
+        try {
+            existsByWebserviceMd5(webserviceMd5);
+            validateQuery(sql, parameters);
+            validateInputTypeParameters(parameters);
+
+            Optional<Webservice> existingWebserviceOpt = webserviceRepository.findByWebserviceId(id);
+            if (existingWebserviceOpt.isPresent()) {
+                Webservice webservice = existingWebserviceOpt.get();
+
+                webservice.setWebserviceMd5(webserviceMd5);
+                webservice.setWebserviceText(sql);
+                webservice.setWebserviceParams(objectMapper.writeValueAsString(parameters));
+                webservice.setWebserviceCode(updatedWebservice.getCode());
+                webservice.setWebserviceName(updatedWebservice.getName());
+                webservice.setWebserviceDescription(updatedWebservice.getDescription());
+                webservice.setWebserviceChangeUid(updatedWebservice.getUserCode());
+
+                webserviceRepository.save(webservice);
+                log.put("UpdatedWebservice", webservice);
+
+                return ResponseEntity.ok(log);
+            } else {
+                log.put("Error", "Webservice with ID " + id + " not found.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(log);
+            }
+
+        } catch (JsonProcessingException e) {
+            log.put("Error", "Error processing parameters for webservice: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(log);
+        } catch (Exception e) {
+            log.put("Error", "Error updating webservice: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(log);
+        }
+    }
+
 
     public static String normalizeSql(String sql) {
         sql = sql.replace(";", "");
@@ -95,8 +151,15 @@ public class WebserviceService {
     public static void validateInputTypeParameters(Map<String, String> parameters) {
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String paramType = entry.getValue().toLowerCase();
-            if (!ALLOWED_TYPES.contains(paramType)) {
-                throw new IllegalArgumentException("Invalid parameter type " + paramType + " for key {{" + entry.getKey()+ "}}");
+
+            // Check if the paramType exists in AllowedType
+            boolean isValidType = Arrays.stream(VarTypes.values())
+                    .map(VarTypes::getType)
+                    .collect(Collectors.toSet())
+                    .contains(paramType);
+
+            if (!isValidType) {
+                throw new IllegalArgumentException("Invalid parameter type " + paramType + " for key {{" + entry.getKey() + "}}");
             }
         }
     }
@@ -123,8 +186,11 @@ public class WebserviceService {
         logger.info("Parameters validated successfully");
     }
 
-    public boolean existsByWebserviceMd5(String queryMd5) {
-        return webserviceRepository.findByWebserviceMd5(queryMd5) != null;
+    public void existsByWebserviceMd5(String queryMd5) {
+        Optional<Webservice> webservice = webserviceRepository.findByWebserviceMd5(queryMd5);
+        if (webservice.isPresent()) {
+            throw new IllegalArgumentException("Webservice already exists");
+        }
     }
 
     public List<Webservice> findAllWebservices() {
@@ -135,11 +201,11 @@ public class WebserviceService {
         webserviceRepository.deleteAll();
     }
 
-    public Webservice findByWebserviceId(String id) {
+    public Optional<Webservice> findByWebserviceId(String id) {
         return webserviceRepository.findByWebserviceId(id);
     }
 
-    public Webservice findByWebserviceMd5(String md5) {
+    public Optional<Webservice> findByWebserviceMd5(String md5) {
         return webserviceRepository.findByWebserviceMd5(md5);
     }
 }

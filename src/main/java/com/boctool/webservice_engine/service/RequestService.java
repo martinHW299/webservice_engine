@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,7 +62,7 @@ public class RequestService {
         for (RequestDTO requestDTO : requestDTOS) {
             ResponseDTO responseDTO = executeQuery(requestDTO);
             responseDTOs.add(responseDTO);
-            log.put("Query_" + i++, responseDTO.getMessage());
+            log.put("Obj_" + i++, responseDTO.getMessage());
         }
         // Return the accumulated responses and log
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);
@@ -83,37 +86,26 @@ public class RequestService {
         try {
             validateElementsForExecution(queryId, sourceId, requestParams);
 
-            Webservice webservice = webserviceRepository.findByWebserviceId(queryId);
+            Optional<Webservice> webservice = webserviceRepository.findByWebserviceId(queryId);
             logger.info("Executing query: {}", webservice);
 
-            boolean isSelect = determineQueryType(webservice.getWebserviceText()).equals("SELECT");
+            boolean isSelect = determineQueryType(webservice.get().getWebserviceText()).equals("SELECT");
 
             DataSource dataSource = sourceService.getDataSourceById(sourceId);
             JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
-            if (requestDTO.getMaxRows() != 0) {
-                jdbcTemplate.setMaxRows(requestDTO.getMaxRows());
-            } else {
-                jdbcTemplate.setMaxRows(100);
-            }
+            jdbcTemplate.setMaxRows(requestDTO.getMaxRows() != 0 ? requestDTO.getMaxRows() : 100);
 
-            queryParams = objectMapper.readValue(webservice.getWebserviceParams(), new TypeReference<HashMap<String, String>>() {
-            });
+            queryParams = objectMapper.readValue(webservice.get().getWebserviceParams(), new TypeReference<HashMap<String, String>>() {});
             validateParameters(queryParams, requestParams);
 
-            maxRows = requestDTO.getMaxRows();
-            if (maxRows != 0) {
-                jdbcTemplate.setMaxRows(maxRows);
-            } else {
-                jdbcTemplate.setMaxRows(100);
-            }
-
-            finalQuery = replaceParameters(webservice.getWebserviceText(), requestParams).replace(";", "");
+            finalQuery = replaceParameters(webservice.get().getWebserviceText(), requestParams).replace(";", "");
 
             logger.info("Final Query: {}", finalQuery);
             logger.info("Parameters: {}", requestParams);
 
-            long startTime = System.currentTimeMillis();
+
+            LocalDateTime startDateTime = LocalDateTime.now();
 
             if (isSelect) {
                 resultList = jdbcTemplate.queryForList(finalQuery);
@@ -125,8 +117,10 @@ public class RequestService {
                 queryResult = Collections.singletonMap("updateCount", affectedRows);
             }
 
-            long endTime = System.currentTimeMillis();
-            double runtime = (endTime - startTime) / 1000.0;
+            LocalDateTime endDateTime = LocalDateTime.now();
+
+            Duration duration = Duration.between(startDateTime, endDateTime);
+            double runtime = duration.toMillis() / 1000.0;
 
             responseDTO.setCode(200);
             responseDTO.setStatus("SUCCESS");
@@ -136,26 +130,26 @@ public class RequestService {
             responseDTO.setMessage("Query executed successfully");
 
             saveRequest(queryId, sourceId, requestParams, finalQuery);
-            saveResponse(runtime, queryId, sourceId, webservice.getWebserviceMd5(), finalQuery, queryParams, requestParams);
+            saveResponse(startDateTime, endDateTime, runtime, 200, null, queryId, sourceId, webservice.get().getWebserviceMd5(), finalQuery, queryParams, requestParams);
 
         } catch (IllegalArgumentException e) {
             responseDTO.setCode(400);
             responseDTO.setStatus("FAILED");
             String message = "Request error: " + e.getMessage();
             responseDTO.setMessage(message);
-            saveResponseError(400, queryId, sourceId, requestParams, finalQuery, message);
+            saveResponse(null, null, 0, 400, message, queryId, sourceId, null, finalQuery, queryParams, requestParams);
         } catch (JsonProcessingException e) {
             responseDTO.setCode(400);
             responseDTO.setStatus("FAILED");
             String message = "Processing error: Parameters for query " + queryId + ": " + e.getMessage();
             responseDTO.setMessage(message);
-            saveResponseError(400, queryId, sourceId, requestParams, null, message);
+            saveResponse(null, null, 0, 400, message, queryId, sourceId, null, finalQuery, queryParams, requestParams);
         } catch (Exception e) {
             responseDTO.setCode(500);
             responseDTO.setStatus("FAILED");
             String message = "Execution error {" + queryId + "} : " + e.getMessage();
             responseDTO.setMessage(message);
-            saveResponseError(500, queryId, sourceId, requestParams, finalQuery, message);
+            saveResponse(null, null, 0, 500, message, queryId, sourceId, null, finalQuery, queryParams, requestParams);
         }
         return responseDTO;
     }
@@ -219,29 +213,21 @@ public class RequestService {
     }
 
 
-    private void saveResponse(double runtime, String queryId, String sourceId, String queryMd5, String finalQuery, Map<String, String> queryParams, Map<String, Object> requestParams) {
+    private void saveResponse(LocalDateTime initDate, LocalDateTime endDate, double runtime, int code, String message, String queryId, String sourceId, String queryMd5, String finalQuery, Map<String, String> queryParams, Map<String, Object> requestParams) {
         Response response = new Response();
+        response.setResponseInitDate(initDate);
+        response.setResponseEndDate(endDate);
         response.setResponseRuntime(runtime);
-        response.setResponseCode(200);
-        response.setResponseMessage("Query executed successfully");
+        response.setResponseStatus(code != 200 ? "HI" : "AC");
+        response.setResponseCode(code);
+        response.setResponseMessage(code != 200 ? message : "Query executed successfully");
         response.setResponseSourceId(sourceId);
         response.setResponseWebserviceId(queryId);
         response.setResponseWebserviceMd5(queryMd5);
         response.setResponseWebserviceText(finalQuery);
         response.setResponseWebserviceParams(queryParams.toString());
         response.setResponseWebserviceValues(requestParams.toString());
-        responseRepository.save(response); // Save response in the request
-    }
-
-    private void saveResponseError(int code, String sqlId, String sourceId, Map<String, Object> requestParams, String finalQuery, String message) {
-        Response response = new Response();
-        response.setResponseCode(code);
-        response.setResponseMessage(null);
-        response.setResponseSourceId(sourceId);
-        response.setResponseWebserviceId(sqlId);
-        response.setResponseWebserviceText(finalQuery);
-        response.setResponseWebserviceValues(requestParams.toString());
-        responseRepository.save(response); // Save response in the request
+        responseRepository.save(response);
     }
 
     private void saveRequest(String sqlId, String sourceId, Map<String, Object> requestParams, String finalQuery) {
