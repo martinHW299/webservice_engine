@@ -28,6 +28,8 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-.idea/src/main/resources
+src/main/resources/application.properties
+src/main/resources/application-bol.properties
+src/main/resources/application-col.properties
 ### VS Code ###
 .vscode/
