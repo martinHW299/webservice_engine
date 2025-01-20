@@ -28,6 +28,9 @@ public class Source {
 
     private String tag;
 
+    @Column(name = "class_name")
+    private String className;
+
     private String url;
 
     private String usr;
